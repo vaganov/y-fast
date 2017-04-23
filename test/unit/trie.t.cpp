@@ -4,7 +4,7 @@
 
 #include <gtest/gtest.h>
 
-#include <trie/trie.h>
+#include <trie.h>
 
 namespace yfast {
 
