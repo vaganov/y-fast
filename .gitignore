@@ -4,5 +4,4 @@ Makefile
 Project.cbp
 cmake_install.cmake
 
-trie.t
 xfast.t
