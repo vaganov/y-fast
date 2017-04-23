@@ -24,7 +24,7 @@ class trie {
   public:
     trie();
 
-    void insert(_Key key, const _Value value);
+    void insert(_Key key, const _Value& value);
     Value* find(_Key key);
 };
 
@@ -37,7 +37,7 @@ trie<_Key, _Value, _Node>::trie() : m_root(nullptr) {
 }
 
 template <typename _Key, typename _Value, typename _Node>
-void trie<_Key, _Value, _Node>::insert(_Key key, const _Value value) {
+void trie<_Key, _Value, _Node>::insert(_Key key, const _Value& value) {
     if (nullptr == m_root) {
         m_root = new _Node();
     }
