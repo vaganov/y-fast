@@ -17,11 +17,11 @@ class trie {
     typedef _Value Value;
 
   private:
-    static const int H = 8 * sizeof(_Key);
-
     _Node* m_root;
 
   public:
+    static const int H = 8 * sizeof(_Key);
+
     trie();
 
     void insert(_Key key, const _Value& value);
