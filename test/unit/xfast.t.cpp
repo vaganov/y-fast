@@ -40,4 +40,21 @@ TEST(XFast, InsertZeroAndOne) {
     EXPECT_EQ(value1, leaf1->value);
 }
 
+TEST(XFast, PredSuccOne) {
+    XFast xfast;
+    const Key key0 = 0;
+    const Value value0 = "zero";
+    xfast.insert(key0, value0);
+    const Key key2 = 2;
+    const Value value2 = "two";
+    xfast.insert(key2, value2);
+    const Key key1 = 1;
+    XFast::Leaf* leaf0 = xfast.pred(key1);
+    ASSERT_TRUE(leaf0);
+    EXPECT_EQ(value0, leaf0->value);
+    XFast::Leaf* leaf2 = xfast.succ(key1);
+    ASSERT_TRUE(leaf2);
+    EXPECT_EQ(value2, leaf2->value);
+}
+
 } // namespace yfast

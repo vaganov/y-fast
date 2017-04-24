@@ -61,6 +61,8 @@ class xfast {
     // public methods
     void insert(_Key key, const _Value& value);
     Leaf* find(_Key key) const;
+    Leaf* pred(_Key key) const;
+    Leaf* succ(_Key key) const;
 
 };
 
@@ -178,17 +180,42 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
     _Node* node = m_root;
     for (int h = H - 1; h > 0; --h) {
         if (key & (1 << h)) {
-            if (nullptr != node->left) {
+            if (nullptr != node->right) {
+                if (nullptr != node->descendant) {
+                    if (key < node->descendant->key) {
+                        node->descendant = leaf;
+                    }
+                }
                 node_existed = true;
             }
             else {
                 _Node* new_node = new _Node();
-                node->left = new_node;
+                new_node->descendant = leaf;
+                node->right = new_node;
+                if (node_existed) {
+                    node->descendant = nullptr;
+                }
+                void* p = new_node;
+                m_hash[h].insert(std::make_pair(key >> h, p));
+                node_existed = false;
+            }
+            node = node->right;
+        }
+        else {
+            if (nullptr != node->left) {
                 if (nullptr != node->descendant) {
-                    new_node->descendant = node->descendant;
-                    if (node_existed) {
-                        node->descendant = nullptr;
+                    if (key > node->descendant->key) {
+                        node->descendant = leaf;
                     }
+                }
+                node_existed = true;
+            }
+            else {
+                _Node* new_node = new _Node();
+                new_node->descendant = leaf;
+                node->left = new_node;
+                if (node_existed) {
+                    node->descendant = nullptr;
                 }
                 void* p = new_node;
                 m_hash[h].insert(std::make_pair(key >> h, p));
@@ -196,24 +223,18 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
             }
             node = node->left;
         }
-        else {
-            if (nullptr != node->right) {
-                node_existed = true;
-            }
-            else {
-                _Node* new_node = new _Node();
-                node->right = new_node;
-                if (nullptr != node->descendant) {
-                    new_node->descendant = node->descendant;
-                    if (node_existed) {
-                        node->descendant = nullptr;
-                    }
-                }
-                void* p = new_node;
-                m_hash[h].insert(std::make_pair(key >> h, p));
-                node_existed = false;
-            }
-            node = node->right;
+    }
+
+    if (key & 1) {
+        node->right = reinterpret_cast<_Node*>(leaf);
+        if (node_existed) {
+            node->descendant = nullptr;
+        }
+    }
+    else {
+        node->left = reinterpret_cast<_Node*>(leaf);
+        if (node_existed) {
+            node->descendant = nullptr;
         }
     }
 
@@ -232,6 +253,36 @@ xfast<_Key, _Value, _Hash>::find(_Key key) const {
     }
     else {
         return nullptr;
+    }
+}
+
+template <typename _Key, typename _Value, typename _Hash>
+typename xfast<_Key, _Value, _Hash>::Leaf*
+xfast<_Key, _Value, _Hash>::pred(_Key key) const {
+    _Leaf* guess = approx(key);
+    if (nullptr == guess) {
+        return nullptr;
+    }
+    if (guess->key > key) {
+        return guess->prv;
+    }
+    else {
+        return guess;
+    }
+}
+
+template <typename _Key, typename _Value, typename _Hash>
+typename xfast<_Key, _Value, _Hash>::Leaf*
+xfast<_Key, _Value, _Hash>::succ(_Key key) const {
+    _Leaf* guess = approx(key);
+    if (nullptr == guess) {
+        return nullptr;
+    }
+    if (guess->key < key) {
+        return guess->nxt;
+    }
+    else {
+        return guess;
     }
 }
 
