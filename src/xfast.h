@@ -1,6 +1,8 @@
 #ifndef _XFAST_H
 #define _XFAST_H
 
+#include <utility>
+
 namespace yfast {
 
 // xfast_leaf

@@ -5,3 +5,10 @@ Project.cbp
 cmake_install.cmake
 
 xfast.t
+build
+__pycache__
+
+cython/*.cpp
+cython/*.so
+
+.idea
