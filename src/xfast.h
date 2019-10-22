@@ -7,78 +7,72 @@ namespace yfast {
 
 // xfast_leaf
 
-template <typename _Key, typename _Value>
+template <typename Key, typename Value>
 struct xfast_leaf {
     xfast_leaf* prv;
     xfast_leaf* nxt;
-    _Key key;
-    _Value value;
+    Key key;
+    Value value;
 
-    xfast_leaf(_Key key, const _Value& value);
+    xfast_leaf(Key key, const Value& value);
 };
 
 // xfast_node
 
-template <typename _Key, typename _Value>
+template <typename Key, typename Value>
 struct xfast_node {
     xfast_node* left;
     xfast_node* right;
-    xfast_leaf<_Key, _Value>* descendant;
+    xfast_leaf<Key, Value>* descendant;
 
     xfast_node();
 };
 
 // xfast
 
-template <typename _Key, typename _Value, typename _Hash>
+template <typename Key, typename Value, typename Hash>
 class xfast {
-  private:
-    // private types
-    typedef xfast_leaf<_Key, _Value> _Leaf;
-
   public:
-    // public typess
-    typedef _Key Key;
-    typedef _Value Value;
-    typedef _Leaf Leaf;
+    // public types
+    typedef xfast_leaf<Key, Value> Leaf;
 
   private:
     // private types
-    typedef xfast_node<_Key, _Value> _Node;
+    typedef xfast_node<Key, Value> Node;
 
     // private static fields
-    static const int H = 8 * sizeof(_Key);
+    static const int H = 8 * sizeof(Key);
 
     // fields
-    _Node* m_root;
-    _Hash m_hash[H];
+    Node* m_root;
+    Hash m_hash[H];
 
     // private methods
-    _Leaf* approx(_Key key) const;
+    Leaf* approx(Key key) const;
 
   public:
     // ctor
     xfast();
 
     // public methods
-    void insert(_Key key, const _Value& value);
-    Leaf* find(_Key key) const;
-    Leaf* pred(_Key key) const;
-    Leaf* succ(_Key key) const;
+    void insert(Key key, const Value& value);
+    Leaf* find(Key key) const;
+    Leaf* pred(Key key) const;
+    Leaf* succ(Key key) const;
 
 };
 
 // xfast_leaf
 
-template <typename _Key, typename _Value>
-xfast_leaf<_Key, _Value>::xfast_leaf(_Key _key, const _Value& _value)
+template <typename Key, typename Value>
+xfast_leaf<Key, Value>::xfast_leaf(Key _key, const Value& _value)
     : prv(nullptr), nxt(nullptr), key(_key), value(_value) {
 }
 
 // xfast_node
 
-template <typename _Key, typename _Value>
-xfast_node<_Key, _Value>::xfast_node()
+template <typename Key, typename Value>
+xfast_node<Key, Value>::xfast_node()
     : left(nullptr), right(nullptr), descendant(nullptr) {
 }
 
@@ -86,9 +80,9 @@ xfast_node<_Key, _Value>::xfast_node()
 
 // private methods
 
-template <typename _Key, typename _Value, typename _Hash>
-typename xfast<_Key, _Value, _Hash>::_Leaf*
-xfast<_Key, _Value, _Hash>::approx(_Key key) const {
+template <typename Key, typename Value, typename Hash>
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::approx(Key key) const {
     if (nullptr == m_root) {
         return nullptr;
     }
@@ -114,37 +108,37 @@ xfast<_Key, _Value, _Hash>::approx(_Key key) const {
     }
 
     if (H == m) {
-        _Leaf* leaf = m_root->descendant;
+        Leaf* leaf = m_root->descendant;
         return leaf;
     }
     if (0 == m) {
-        typename _Hash::const_iterator i = m_hash[0].find(key);
+        typename Hash::const_iterator i = m_hash[0].find(key);
         void* p = i->second;
-        _Leaf* leaf = static_cast<_Leaf*>(p);
+        Leaf* leaf = static_cast<Leaf*>(p);
         return leaf;
     }
-    typename _Hash::const_iterator i = m_hash[m].find(key >> m);
+    typename Hash::const_iterator i = m_hash[m].find(key >> m);
     void* p = i->second;
-    _Node* node = static_cast<_Node*>(p);
-    _Leaf* leaf = node->descendant;
+    Node* node = static_cast<Node*>(p);
+    Leaf* leaf = node->descendant;
     return leaf;
 }
 
 // ctor
 
-template <typename _Key, typename _Value, typename _Hash>
-xfast<_Key, _Value, _Hash>::xfast() : m_root(nullptr) {
+template <typename Key, typename Value, typename Hash>
+xfast<Key, Value, Hash>::xfast() : m_root(nullptr) {
 }
 
 // public methods
 
-template <typename _Key, typename _Value, typename _Hash>
-void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
-    _Leaf* prv = nullptr;
-    _Leaf* nxt = nullptr;
-    _Leaf* guess = approx(key);
+template <typename Key, typename Value, typename Hash>
+void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
+    Leaf* prv = nullptr;
+    Leaf* nxt = nullptr;
+    Leaf* guess = approx(key);
     if (nullptr != guess) {
-        const _Key guess_key = guess->key;
+        const Key guess_key = guess->key;
         if (guess_key == key) {
             return;
         }
@@ -158,7 +152,7 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
         }
     }
 
-    _Leaf* leaf = new _Leaf(key, value);
+    Leaf* leaf = new Leaf(key, value);
     if (nullptr != prv) {
         prv->nxt = leaf;
     }
@@ -174,12 +168,12 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
         node_existed = true;
     }
     else {
-        m_root = new _Node();
+        m_root = new Node();
         m_root->descendant = leaf;
         node_existed = false;
     }
 
-    _Node* node = m_root;
+    Node* node = m_root;
     for (int h = H - 1; h > 0; --h) {
         if (key & (1 << h)) {
             if (nullptr != node->right) {
@@ -191,7 +185,7 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
                 node_existed = true;
             }
             else {
-                _Node* new_node = new _Node();
+                Node* new_node = new Node();
                 new_node->descendant = leaf;
                 node->right = new_node;
                 if (node_existed) {
@@ -213,7 +207,7 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
                 node_existed = true;
             }
             else {
-                _Node* new_node = new _Node();
+                Node* new_node = new Node();
                 new_node->descendant = leaf;
                 node->left = new_node;
                 if (node_existed) {
@@ -228,13 +222,13 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
     }
 
     if (key & 1) {
-        node->right = reinterpret_cast<_Node*>(leaf);
+        node->right = reinterpret_cast<Node*>(leaf);
         if (node_existed) {
             node->descendant = nullptr;
         }
     }
     else {
-        node->left = reinterpret_cast<_Node*>(leaf);
+        node->left = reinterpret_cast<Node*>(leaf);
         if (node_existed) {
             node->descendant = nullptr;
         }
@@ -244,13 +238,13 @@ void xfast<_Key, _Value, _Hash>::insert(_Key key, const _Value& value) {
     m_hash[0].insert(std::make_pair(key, p));
 }
 
-template <typename _Key, typename _Value, typename _Hash>
-typename xfast<_Key, _Value, _Hash>::Leaf*
-xfast<_Key, _Value, _Hash>::find(_Key key) const {
-    typename _Hash::const_iterator i = m_hash[0].find(key);
+template <typename Key, typename Value, typename Hash>
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::find(Key key) const {
+    typename Hash::const_iterator i = m_hash[0].find(key);
     if (i != m_hash[0].end()) {
         void* p = i->second;
-        _Leaf* leaf = static_cast<_Leaf*>(p);
+        Leaf* leaf = static_cast<Leaf*>(p);
         return leaf;
     }
     else {
@@ -258,10 +252,10 @@ xfast<_Key, _Value, _Hash>::find(_Key key) const {
     }
 }
 
-template <typename _Key, typename _Value, typename _Hash>
-typename xfast<_Key, _Value, _Hash>::Leaf*
-xfast<_Key, _Value, _Hash>::pred(_Key key) const {
-    _Leaf* guess = approx(key);
+template <typename Key, typename Value, typename Hash>
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::pred(Key key) const {
+    Leaf* guess = approx(key);
     if (nullptr == guess) {
         return nullptr;
     }
@@ -273,10 +267,10 @@ xfast<_Key, _Value, _Hash>::pred(_Key key) const {
     }
 }
 
-template <typename _Key, typename _Value, typename _Hash>
-typename xfast<_Key, _Value, _Hash>::Leaf*
-xfast<_Key, _Value, _Hash>::succ(_Key key) const {
-    _Leaf* guess = approx(key);
+template <typename Key, typename Value, typename Hash>
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::succ(Key key) const {
+    Leaf* guess = approx(key);
     if (nullptr == guess) {
         return nullptr;
     }

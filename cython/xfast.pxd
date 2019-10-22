@@ -1,10 +1,10 @@
 cdef extern from 'xfast.h' namespace 'yfast':
-    cdef cppclass xfast[_Key, _Value, _Hash]:
+    cdef cppclass xfast[Key, Value, Hash]:
         cppclass Leaf:
-            _Key key
-            _Value value
+            Key key
+            Value value
         xfast()
-        void insert(_Key, _Value&)
-        Leaf* find(_Key)
-        Leaf* pred(_Key)
-        Leaf* succ(_Key)
+        void insert(Key, Value&)
+        Leaf* find(Key)
+        Leaf* pred(Key)
+        Leaf* succ(Key)
