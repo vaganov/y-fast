@@ -1,6 +1,7 @@
 #ifndef _XFAST_H
 #define _XFAST_H
 
+#include <unordered_map>
 #include <utility>
 
 namespace yfast {
@@ -30,7 +31,7 @@ struct xfast_node {
 
 // xfast
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash = std::unordered_map>
 class xfast {
   public:
     // public types
@@ -39,13 +40,14 @@ class xfast {
   private:
     // private types
     typedef xfast_node<Key, Value> Node;
+    typedef Hash<Key, void*> NodeHash;
 
     // private static fields
     static const int H = 8 * sizeof(Key);
 
     // fields
     Node* m_root;
-    Hash m_hash[H];
+    NodeHash m_hash[H];
 
     // private methods
     Leaf* approx(Key key) const;
@@ -80,7 +82,7 @@ xfast_node<Key, Value>::xfast_node()
 
 // private methods
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::approx(Key key) const {
     if (nullptr == m_root) {
@@ -112,12 +114,12 @@ xfast<Key, Value, Hash>::approx(Key key) const {
         return leaf;
     }
     if (0 == m) {
-        typename Hash::const_iterator i = m_hash[0].find(key);
+        typename NodeHash::const_iterator i = m_hash[0].find(key);
         void* p = i->second;
         Leaf* leaf = static_cast<Leaf*>(p);
         return leaf;
     }
-    typename Hash::const_iterator i = m_hash[m].find(key >> m);
+    typename NodeHash::const_iterator i = m_hash[m].find(key >> m);
     void* p = i->second;
     Node* node = static_cast<Node*>(p);
     Leaf* leaf = node->descendant;
@@ -126,13 +128,13 @@ xfast<Key, Value, Hash>::approx(Key key) const {
 
 // ctor
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash>
 xfast<Key, Value, Hash>::xfast() : m_root(nullptr) {
 }
 
 // public methods
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash>
 void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     Leaf* prv = nullptr;
     Leaf* nxt = nullptr;
@@ -238,10 +240,10 @@ void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     m_hash[0].insert(std::make_pair(key, p));
 }
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::find(Key key) const {
-    typename Hash::const_iterator i = m_hash[0].find(key);
+    typename NodeHash::const_iterator i = m_hash[0].find(key);
     if (i != m_hash[0].end()) {
         void* p = i->second;
         Leaf* leaf = static_cast<Leaf*>(p);
@@ -252,7 +254,7 @@ xfast<Key, Value, Hash>::find(Key key) const {
     }
 }
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::pred(Key key) const {
     Leaf* guess = approx(key);
@@ -267,7 +269,7 @@ xfast<Key, Value, Hash>::pred(Key key) const {
     }
 }
 
-template <typename Key, typename Value, typename Hash>
+template <typename Key, typename Value, template<typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::succ(Key key) const {
     Leaf* guess = approx(key);

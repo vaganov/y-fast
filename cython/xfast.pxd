@@ -1,5 +1,5 @@
 cdef extern from 'xfast.h' namespace 'yfast':
-    cdef cppclass xfast[Key, Value, Hash]:
+    cdef cppclass xfast[Key, Value, Hash = *]:
         cppclass Leaf:
             Key key
             Value value

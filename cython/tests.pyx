@@ -4,16 +4,14 @@
 from xfast cimport xfast
 
 from libcpp.string cimport string
-from libcpp.unordered_map cimport unordered_map
 
 from cython.operator cimport dereference
 
 ctypedef int Key
 ctypedef string Value
-ctypedef unordered_map[Key, void*] Hash
 
 def test_insert_zero():
-    cdef xfast[Key, Value, Hash] trie
+    cdef xfast[Key, Value] trie
     cdef Key key = 0
     cdef Value value = b'zero'
     trie.insert(key, value)
@@ -22,7 +20,7 @@ def test_insert_zero():
     assert(dereference(leaf).value == value)
 
 def test_insert_zero_and_one():
-    cdef xfast[Key, Value, Hash] trie
+    cdef xfast[Key, Value] trie
     cdef Key key0 = 0
     cdef Value value0 = b'zero'
     trie.insert(key0, value0)
@@ -37,7 +35,7 @@ def test_insert_zero_and_one():
     assert(dereference(leaf1).value == value1)
 
 def test_pred_succ_one():
-    cdef xfast[Key, Value, Hash] trie
+    cdef xfast[Key, Value] trie
     cdef Key key0 = 0
     cdef Value value0 = b'zero'
     trie.insert(key0, value0)
