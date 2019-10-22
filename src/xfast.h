@@ -40,14 +40,16 @@ class xfast {
   private:
     // private types
     typedef xfast_node<Key, Value> Node;
-    typedef Hash<Key, void*> NodeHash;
+    typedef Hash<Key, Node*> NodeHash;
+    typedef Hash<Key, Leaf*> LeafHash;
 
     // private static fields
     static const int H = 8 * sizeof(Key);
 
     // fields
     Node* m_root;
-    NodeHash m_hash[H];
+    NodeHash m_nodes[H]; // TODO: m_nodes[0] always empty, shift or reverse index
+    LeafHash m_leaves;
 
     // private methods
     Leaf* approx(Key key) const;
@@ -89,12 +91,17 @@ xfast<Key, Value, Hash>::approx(Key key) const {
         return nullptr;
     }
 
-    int l = 0;
+    Leaf* found = find(key);
+    if (nullptr != found) {
+        return found;
+    }
+
+    int l = 1;
     int r = H;
     int m;
     while (r - l > 1) { // ln H
         m = (r + l) / 2;
-        if (m_hash[m].count(key >> m) > 0) {
+        if (m_nodes[m].count(key >> m) > 0) {
             r = m;
         }
         else {
@@ -102,7 +109,7 @@ xfast<Key, Value, Hash>::approx(Key key) const {
         }
     }
 
-    if (m_hash[l].count(key >> l) > 0) {
+    if (m_nodes[l].count(key >> l) > 0) {
         m = l;
     }
     else {
@@ -113,15 +120,8 @@ xfast<Key, Value, Hash>::approx(Key key) const {
         Leaf* leaf = m_root->descendant;
         return leaf;
     }
-    if (0 == m) {
-        typename NodeHash::const_iterator i = m_hash[0].find(key);
-        void* p = i->second;
-        Leaf* leaf = static_cast<Leaf*>(p);
-        return leaf;
-    }
-    typename NodeHash::const_iterator i = m_hash[m].find(key >> m);
-    void* p = i->second;
-    Node* node = static_cast<Node*>(p);
+    typename NodeHash::const_iterator i = m_nodes[m].find(key >> m);
+    Node* node = i->second;
     Leaf* leaf = node->descendant;
     return leaf;
 }
@@ -193,8 +193,7 @@ void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
                 if (node_existed) {
                     node->descendant = nullptr;
                 }
-                void* p = new_node;
-                m_hash[h].insert(std::make_pair(key >> h, p));
+                m_nodes[h].insert(std::make_pair(key >> h, new_node));
                 node_existed = false;
             }
             node = node->right;
@@ -215,38 +214,26 @@ void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
                 if (node_existed) {
                     node->descendant = nullptr;
                 }
-                void* p = new_node;
-                m_hash[h].insert(std::make_pair(key >> h, p));
+                m_nodes[h].insert(std::make_pair(key >> h, new_node));
                 node_existed = false;
             }
             node = node->left;
         }
     }
 
-    if (key & 1) {
-        node->right = reinterpret_cast<Node*>(leaf);
-        if (node_existed) {
-            node->descendant = nullptr;
-        }
-    }
-    else {
-        node->left = reinterpret_cast<Node*>(leaf);
-        if (node_existed) {
-            node->descendant = nullptr;
-        }
+    if (node_existed) {
+        node->descendant = nullptr;
     }
 
-    void* p = leaf;
-    m_hash[0].insert(std::make_pair(key, p));
+    m_leaves.insert(std::make_pair(key, leaf));
 }
 
 template <typename Key, typename Value, template<typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::find(Key key) const {
-    typename NodeHash::const_iterator i = m_hash[0].find(key);
-    if (i != m_hash[0].end()) {
-        void* p = i->second;
-        Leaf* leaf = static_cast<Leaf*>(p);
+    typename LeafHash::const_iterator i = m_leaves.find(key);
+    if (i != m_leaves.end()) {
+        Leaf* leaf = i->second;
         return leaf;
     }
     else {
