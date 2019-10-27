@@ -6,10 +6,17 @@
 
 namespace yfast {
 
+// forward decl
+
+template <typename Key, typename Value> struct xfast_leaf;
+template <typename Key, typename Value> struct xfast_node;
+template <typename Key, typename Value, template<typename...> class Hash> class xfast;
+
 // xfast_leaf
 
 template <typename Key, typename Value>
 struct xfast_leaf {
+    xfast_node<Key, Value>* parent;
     xfast_leaf* prv;
     xfast_leaf* nxt;
     Key key;
@@ -22,6 +29,7 @@ struct xfast_leaf {
 
 template <typename Key, typename Value>
 struct xfast_node {
+    xfast_node* parent;
     xfast_node* left;
     xfast_node* right;
     xfast_leaf<Key, Value>* descendant;
@@ -72,14 +80,14 @@ class xfast {
 
 template <typename Key, typename Value>
 xfast_leaf<Key, Value>::xfast_leaf(Key _key, const Value& _value)
-    : prv(nullptr), nxt(nullptr), key(_key), value(_value) {
+    : parent(nullptr), prv(nullptr), nxt(nullptr), key(_key), value(_value) {
 }
 
 // xfast_node
 
 template <typename Key, typename Value>
 xfast_node<Key, Value>::xfast_node()
-    : left(nullptr), right(nullptr), descendant(nullptr) {
+    : parent(nullptr), left(nullptr), right(nullptr), descendant(nullptr) {
 }
 
 // xfast
@@ -211,6 +219,7 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
             }
             else {
                 Node* new_node = new Node();
+                new_node->parent = node;
                 new_node->descendant = leaf;
                 node->right = new_node;
                 if (node_existed) {
@@ -232,6 +241,7 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
             }
             else {
                 Node* new_node = new Node();
+                new_node->parent = node;
                 new_node->descendant = leaf;
                 node->left = new_node;
                 if (node_existed) {
@@ -248,6 +258,7 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
         node->descendant = nullptr;
     }
 
+    leaf->parent = node;
     m_leaves.insert(std::make_pair(key, leaf));
 
     return leaf;
