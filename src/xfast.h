@@ -57,6 +57,8 @@ class xfast {
   public:
     // ctor
     xfast();
+    // dtor
+    ~xfast();
 
     // public methods
     Leaf* insert(Key key, const Value& value);
@@ -130,6 +132,27 @@ xfast<Key, Value, Hash>::approx(Key key) const {
 
 template <typename Key, typename Value, template<typename...> class Hash>
 xfast<Key, Value, Hash>::xfast() : m_root(nullptr) {
+}
+
+// dtor
+
+template <typename Key, typename Value, template<typename...> class Hash>
+xfast<Key, Value, Hash>::~xfast() {
+    if (nullptr != m_root) {
+        delete m_root;
+    }
+    for (int h = 1; h < H; ++h) {
+        for (const auto& pair: m_nodes[h]) {
+            Node* node = pair.second;
+            delete node;
+        }
+        m_nodes[h].clear();
+    }
+    for (const auto& pair: m_leaves) {
+        Leaf* leaf = pair.second;
+        delete leaf;
+    }
+    m_leaves.clear();
 }
 
 // public methods
