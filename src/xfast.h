@@ -59,7 +59,7 @@ class xfast {
     xfast();
 
     // public methods
-    void insert(Key key, const Value& value);
+    Leaf* insert(Key key, const Value& value);
     Leaf* find(Key key) const;
     Leaf* pred(Key key) const;
     Leaf* succ(Key key) const;
@@ -135,16 +135,16 @@ xfast<Key, Value, Hash>::xfast() : m_root(nullptr) {
 // public methods
 
 template <typename Key, typename Value, template<typename...> class Hash>
-void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     Leaf* prv = nullptr;
     Leaf* nxt = nullptr;
     Leaf* guess = approx(key);
     if (nullptr != guess) {
-        const Key guess_key = guess->key;
-        if (guess_key == key) {
-            return;
+        if (guess->key == key) {
+            return guess;
         }
-        if (guess_key < key) {
+        if (guess->key < key) {
             prv = guess;
             nxt = guess->nxt;
         }
@@ -226,6 +226,8 @@ void xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     }
 
     m_leaves.insert(std::make_pair(key, leaf));
+
+    return leaf;
 }
 
 template <typename Key, typename Value, template<typename...> class Hash>

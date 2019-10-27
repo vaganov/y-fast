@@ -14,7 +14,9 @@ def test_insert_zero():
     cdef xfast[Key, Value] trie
     cdef Key key = 0
     cdef Value value = b'zero'
-    trie.insert(key, value)
+    leaf = trie.insert(key, value)
+    assert(leaf is not NULL)
+    assert(dereference(leaf).value == value)
     leaf = trie.find(key)
     assert(leaf is not NULL)
     assert(dereference(leaf).value == value)
@@ -29,10 +31,12 @@ def test_insert_zero_and_one():
     cdef xfast[Key, Value] trie
     cdef Key key0 = 0
     cdef Value value0 = b'zero'
-    trie.insert(key0, value0)
+    leaf0 = trie.insert(key0, value0)
     cdef key1 = 1
     cdef Value value1 = b'one'
-    trie.insert(key1, value1)
+    leaf1 = trie.insert(key1, value1)
+    assert(leaf0 is not NULL)
+    assert(dereference(leaf0).value == value0)
     leaf0 = trie.find(key0)
     assert(leaf0 is not NULL)
     assert(dereference(leaf0).value == value0)
@@ -42,6 +46,8 @@ def test_insert_zero_and_one():
     leaf0 = trie.succ(key0)
     assert(leaf0 is not NULL)
     assert(dereference(leaf0).value == value0)
+    assert(leaf1 is not NULL)
+    assert(dereference(leaf1).value == value1)
     leaf1 = trie.find(key1)
     assert(leaf1 is not NULL)
     assert(dereference(leaf1).value == value1)

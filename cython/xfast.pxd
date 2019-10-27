@@ -4,7 +4,7 @@ cdef extern from 'xfast.h' namespace 'yfast':
             Key key
             Value value
         xfast()
-        void insert(Key, Value&)
+        Leaf* insert(Key, const Value&)
         Leaf* find(Key)
         Leaf* pred(Key)
         Leaf* succ(Key)
