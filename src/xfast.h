@@ -10,7 +10,7 @@ namespace yfast {
 
 template <typename Key, typename Value> struct xfast_leaf;
 template <typename Key, typename Value> struct xfast_node;
-template <typename Key, typename Value, template<typename...> class Hash> class xfast;
+template <typename Key, typename Value, template <typename...> class Hash> class xfast;
 
 // xfast_leaf
 
@@ -39,7 +39,7 @@ struct xfast_node {
 
 // xfast
 
-template <typename Key, typename Value, template<typename...> class Hash = std::unordered_map>
+template <typename Key, typename Value, template <typename...> class Hash = std::unordered_map>
 class xfast {
   public:
     // public types
@@ -96,7 +96,7 @@ xfast_node<Key, Value>::xfast_node()
 
 // private methods
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::approx(Key key) const {
     if (nullptr == m_root) {
@@ -140,13 +140,13 @@ xfast<Key, Value, Hash>::approx(Key key) const {
 
 // ctor
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 xfast<Key, Value, Hash>::xfast() : m_root(nullptr) {
 }
 
 // dtor
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 xfast<Key, Value, Hash>::~xfast() {
     if (nullptr != m_root) {
         delete m_root;
@@ -167,7 +167,7 @@ xfast<Key, Value, Hash>::~xfast() {
 
 // public methods
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     Leaf* prv = nullptr;
@@ -273,7 +273,7 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     return leaf;
 }
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 bool
 xfast<Key, Value, Hash>::remove(Key key) {
     typename LeafHash::const_iterator i = m_leaves.find(key);
@@ -343,7 +343,7 @@ xfast<Key, Value, Hash>::remove(Key key) {
     return true;
 }
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::find(Key key) const {
     typename LeafHash::const_iterator i = m_leaves.find(key);
@@ -356,7 +356,7 @@ xfast<Key, Value, Hash>::find(Key key) const {
     }
 }
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::pred(Key key) const {
     Leaf* guess = approx(key);
@@ -371,7 +371,7 @@ xfast<Key, Value, Hash>::pred(Key key) const {
     }
 }
 
-template <typename Key, typename Value, template<typename...> class Hash>
+template <typename Key, typename Value, template <typename...> class Hash>
 typename xfast<Key, Value, Hash>::Leaf*
 xfast<Key, Value, Hash>::succ(Key key) const {
     Leaf* guess = approx(key);
