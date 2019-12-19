@@ -83,6 +83,50 @@ def test_insert_and_remove_zero_and_one():
     assert(trie.remove(key1))
     assert(trie.find(key1) is NULL)
 
+def test_leftmost_and_rightmost_empty():
+    cdef xfast[Key, Value] trie
+    assert(trie.leftmost() is NULL)
+    assert(trie.rightmost() is NULL)
+
+def test_leftmost_and_rightmost_zero():
+    cdef xfast[Key, Value] trie
+    cdef Key key = 0
+    cdef Value value = b'zero'
+    assert(trie.insert(key, value) is not NULL)
+    leaf = trie.leftmost()
+    assert(leaf is not NULL)
+    assert(dereference(leaf).value == value)
+    leaf = trie.rightmost()
+    assert(leaf is not NULL)
+    assert(dereference(leaf).value == value)
+
+def test_leftmost_and_rightmost_one():
+    cdef xfast[Key, Value] trie
+    cdef Key key = 1
+    cdef Value value = b'one'
+    assert(trie.insert(key, value) is not NULL)
+    leaf = trie.leftmost()
+    assert(leaf is not NULL)
+    assert(dereference(leaf).value == value)
+    leaf = trie.rightmost()
+    assert(leaf is not NULL)
+    assert(dereference(leaf).value == value)
+
+def test_leftmost_and_rightmost_zero_and_one():
+    cdef xfast[Key, Value] trie
+    cdef Key key0 = 0
+    cdef Value value0 = b'zero'
+    assert(trie.insert(key0, value0) is not NULL)
+    cdef key1 = 1
+    cdef Value value1 = b'one'
+    assert(trie.insert(key1, value1) is not NULL)
+    leaf0 = trie.leftmost()
+    assert(leaf0 is not NULL)
+    assert(dereference(leaf0).value == value0)
+    leaf1 = trie.rightmost()
+    assert(leaf1 is not NULL)
+    assert(dereference(leaf1).value == value1)
+
 def test_pred_succ_one():
     cdef xfast[Key, Value] trie
     cdef Key key0 = 0

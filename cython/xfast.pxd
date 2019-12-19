@@ -8,6 +8,8 @@ cdef extern from 'xfast.h' namespace 'yfast':
         xfast()
         Leaf* insert(Key, const Value&)
         bool remove(Key)
+        Leaf* leftmost()
+        Leaf* rightmost()
         Leaf* find(Key)
         Leaf* pred(Key)
         Leaf* succ(Key)

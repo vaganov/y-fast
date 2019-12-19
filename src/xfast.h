@@ -72,6 +72,8 @@ class xfast {
     Leaf* insert(Key key, const Value& value);
     bool remove(Key key);
 
+    Leaf* leftmost() const;
+    Leaf* rightmost() const;
     Leaf* find(Key key) const;
     Leaf* pred(Key key) const;
     Leaf* succ(Key key) const;
@@ -256,7 +258,6 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
         }
     }
 
-    // These pointers are never dereferenced and only tested for null. Let this be an undocumented feature.
     if (key & 1) {
         node->right = reinterpret_cast<Node*>(leaf);
     }
@@ -341,6 +342,56 @@ xfast<Key, Value, Hash>::remove(Key key) {
     }
     delete leaf;
     return true;
+}
+
+template <typename Key, typename Value, template <typename...> class Hash>
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::leftmost() const {
+    if (nullptr == m_root) {
+        return nullptr;
+    }
+
+    Node* node = m_root;
+    for (int h = 1; h < H; ++h) {
+        if (nullptr != node->left) {
+            node = node->left;
+        }
+        else {
+            break;
+        }
+    }
+
+    if (nullptr != node->left) {
+        return reinterpret_cast<Leaf*>(node->left);
+    }
+    else {
+        return node->descendant;
+    }
+}
+
+template <typename Key, typename Value, template <typename...> class Hash>
+typename xfast<Key, Value, Hash>::Leaf*
+xfast<Key, Value, Hash>::rightmost() const {
+    if (nullptr == m_root) {
+        return nullptr;
+    }
+
+    Node* node = m_root;
+    for (int h = 1; h < H; ++h) {
+        if (nullptr != node->right) {
+            node = node->right;
+        }
+        else {
+            break;
+        }
+    }
+
+    if (nullptr != node->right) {
+        return reinterpret_cast<Leaf*>(node->right);
+    }
+    else {
+        return node->descendant;
+    }
 }
 
 template <typename Key, typename Value, template <typename...> class Hash>
