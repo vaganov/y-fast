@@ -1,3 +1,5 @@
+from libcpp cimport bool
+
 cdef extern from 'xfast.h' namespace 'yfast':
     cdef cppclass xfast[Key, Value, Hash = *]:
         cppclass Leaf:
@@ -5,6 +7,7 @@ cdef extern from 'xfast.h' namespace 'yfast':
             Value value
         xfast()
         Leaf* insert(Key, const Value&)
+        bool remove(Key)
         Leaf* find(Key)
         Leaf* pred(Key)
         Leaf* succ(Key)

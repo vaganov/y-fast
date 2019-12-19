@@ -70,6 +70,8 @@ class xfast {
 
     // public methods
     Leaf* insert(Key key, const Value& value);
+    bool remove(Key key);
+
     Leaf* find(Key key) const;
     Leaf* pred(Key key) const;
     Leaf* succ(Key key) const;
@@ -269,6 +271,76 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
     m_leaves.insert(std::make_pair(key, leaf));
 
     return leaf;
+}
+
+template <typename Key, typename Value, template<typename...> class Hash>
+bool
+xfast<Key, Value, Hash>::remove(Key key) {
+    typename LeafHash::const_iterator i = m_leaves.find(key);
+    if (i == m_leaves.end()) {
+        return false;
+    }
+    Leaf* leaf = i->second;
+    m_leaves.erase(i);
+    Leaf* prv = leaf->prv;
+    Leaf* nxt = leaf->nxt;
+    if (nullptr != prv) {
+        prv->nxt = nxt;
+    }
+    if (nullptr != nxt) {
+        nxt->prv = prv;
+    }
+    Node* node = leaf->parent;
+    bool child_removed = true;
+    for (int h = 1; h < H; ++h) {
+        if (node->descendant == leaf) {
+            if (nullptr == node->left) {
+                node->descendant = nxt;
+            }
+            else {
+                node->descendant = prv;
+            }
+        }
+        Node* parent = node->parent;
+        if (child_removed) {
+            if (key & (1 << (h - 1))) { // TODO: was_right
+                node->right = nullptr;
+            }
+            else {
+                node->left = nullptr;
+            }
+            if (nullptr == node->left && nullptr == node->right) {
+                m_nodes[h].erase(key >> h);
+                delete node;
+            }
+            else {
+                child_removed = false;
+            }
+        }
+        node = parent;
+    }
+    if (m_root->descendant == leaf) {
+        if (nullptr == m_root->left) {
+            m_root->descendant = nxt;
+        }
+        else {
+            m_root->descendant = prv;
+        }
+    }
+    if (child_removed) {
+        if (key & (1 << (H - 1))) {
+            m_root->right = nullptr;
+        }
+        else {
+            m_root->left = nullptr;
+        }
+        if (nullptr == m_root->left && nullptr == m_root->right) {
+            delete m_root;
+            m_root = nullptr;
+        }
+    }
+    delete leaf;
+    return true;
 }
 
 template <typename Key, typename Value, template<typename...> class Hash>
