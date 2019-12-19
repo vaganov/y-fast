@@ -254,6 +254,13 @@ xfast<Key, Value, Hash>::insert(Key key, const Value& value) {
         }
     }
 
+    // These pointers are never dereferenced and only tested for null. Let this be an undocumented feature.
+    if (key & 1) {
+        node->right = reinterpret_cast<Node*>(leaf);
+    }
+    else {
+        node->left = reinterpret_cast<Node*>(leaf);
+    }
     if (node_existed) {
         node->descendant = nullptr;
     }
