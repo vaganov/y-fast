@@ -2,6 +2,7 @@
 #define _YFAST_AVL_H
 
 #include <concepts>
+#include <functional>
 
 #include <bst.h>
 
@@ -12,10 +13,11 @@ concept SelfBalancedNodeGeneric = NodeGeneric<Node> && requires (Node node) {
     { node.balance_factor } -> std::convertible_to<int>;
 };
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq = KeyEq<_Node>, CompareGeneric<_Node> _Compare = KeyCompare<_Node>>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq = std::equal_to<typename _Node::Key>, CompareGeneric<typename _Node::Key> _Compare = std::less<typename _Node::Key>>
 class avl: public bst<_Node, _Eq, _Compare> {
 public:
     using typename bst<_Node, _Eq, _Compare>::Node;
+    using typename bst<_Node, _Eq, _Compare>::Key;
     using typename bst<_Node, _Eq, _Compare>::Eq;
     using typename bst<_Node, _Eq, _Compare>::Compare;
 
@@ -30,12 +32,12 @@ protected:
     using bst<_Node, _Eq, _Compare>::_root;
 
 public:
-    explicit avl(Eq eq = Eq(), Compare cmp = Compare()): bst<_Node, _Eq, _Compare>(eq, cmp) {}
+    explicit avl(Eq eq = Eq(), Compare cmp = Compare()): avl(nullptr, eq, cmp) {}
 
     Node* insert(Node* node);
     Node* remove(Node* node);
 
-    SplitResult split();
+    SplitResult split();  // TODO: move to 'bsl'
 
 protected:
     explicit avl(Node* root, Eq eq = Eq(), Compare cmp = Compare()): bst<_Node, _Eq, _Compare>(root, eq, cmp) {}
@@ -51,7 +53,7 @@ private:
     static Node* rotate_left_right(Node* parent, Node* child);
 };
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node* node) {
     auto new_node = this->template bst<_Node, _Eq, _Compare>::insert(node);
     if (new_node != node) {
@@ -123,7 +125,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node
     return node;
 }
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::remove(Node* node) {
     auto remove_report = this->template bst<_Node, _Eq, _Compare>::remove(node);
     auto new_subroot = remove_report.subtree_child;
@@ -197,7 +199,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::remove(Node
     return node;
 }
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::SplitResult avl<_Node, _Eq, _Compare>::split() {
     if (_root == nullptr) {
         return {avl(_eq, _cmp), avl(_eq, _cmp)};
@@ -211,7 +213,7 @@ typename avl<_Node, _Eq, _Compare>::SplitResult avl<_Node, _Eq, _Compare>::split
     return split_result;
 }
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_left(Node* parent, Node* child) {
     link_right(parent, child->left);
     link_left(child, parent);
@@ -231,7 +233,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_left
     return child;
 }
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_right(Node* parent, Node* child) {
     link_left(parent, child->right);
     link_right(child, parent);
@@ -251,7 +253,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_righ
     return child;
 }
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_right_left(Node* parent, Node* child) {
     auto grand_child = child->left;
 
@@ -281,7 +283,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_righ
     return grand_child;
 }
 
-template <SelfBalancedNodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_left_right(Node* parent, Node* child) {
     auto grand_child = child->right;
 

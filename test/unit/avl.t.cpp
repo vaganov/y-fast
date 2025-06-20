@@ -5,7 +5,9 @@
 #include <gtest/gtest.h>
 
 struct Node {
-    int key;
+    typedef int Key;
+
+    Key key;
     Node* parent;
     Node* left;
     Node* right;
@@ -35,15 +37,10 @@ TEST(avl, insert) {
 
 TEST(avl, remove) {
     avl tree;
-    Node* node;
     for (auto i = 1; i < 16; ++i) {
-        if (i == 8) {
-            node = tree.insert(new Node(i));
-        }
-        else {
-            tree.insert(new Node(i));
-        }
+        tree.insert(new Node(i));
     }
+    auto node = tree.find(8);
     tree.remove(node);
     std::cerr << tree << std::endl;
 }

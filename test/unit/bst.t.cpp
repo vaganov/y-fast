@@ -5,7 +5,9 @@
 #include <gtest/gtest.h>
 
 struct Node {
-    int key;
+    typedef int Key;
+
+    Key key;
     Node* parent;
     Node* left;
     Node* right;
@@ -26,17 +28,18 @@ TEST(bst, smoke) {
 
 TEST(bst, insert) {
     bst tree;
-    tree.insert(new Node(1, nullptr, nullptr, nullptr));
-    tree.insert(new Node(2, nullptr, nullptr, nullptr));
-    tree.insert(new Node(3, nullptr, nullptr, nullptr));
+    for (auto i = 1; i < 4; ++i) {
+        tree.insert(new Node(i));
+    }
     std::cerr << tree << std::endl;
 }
 
 TEST(bst, remove) {
     bst tree;
-    auto node = tree.insert(new Node(1, nullptr, nullptr, nullptr));
-    tree.insert(new Node(2, nullptr, nullptr, nullptr));
-    tree.insert(new Node(3, nullptr, nullptr, nullptr));
+    for (auto i = 1; i < 4; ++i) {
+        tree.insert(new Node(i));
+    }
+    auto node = tree.find(1);
     tree.remove(node);
     std::cerr << tree << std::endl;
 }

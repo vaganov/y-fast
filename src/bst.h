@@ -2,54 +2,34 @@
 #define _YFAST_BST_H
 
 #include <concepts>
-#include <cstddef>
+#include <functional>
 
 namespace yfast {
 
 template <typename Node>
 concept NodeGeneric = requires (Node node) {
+    { node.key } -> std::convertible_to<typename Node::Key>;
     { node.parent } -> std::convertible_to<Node*>;
     { node.left } -> std::convertible_to<Node*>;
     { node.right } -> std::convertible_to<Node*>;
     { node.size } -> std::convertible_to<unsigned int>;
 };
 
-template <typename Node>
-concept KeyGeneric = requires (Node node) {
-    // { node.key } -> std::convertible_to<typename Node::Key>;
-    { node.key };
-};
-
-template <typename Eq, typename Node>
-concept EqGeneric = requires (Eq eq, Node lhs, Node rhs) {
+template <typename Eq, typename Key>
+concept EqGeneric = requires (Eq eq, Key lhs, Key rhs) {
     { eq(lhs, rhs) } -> std::same_as<bool>;
 };
 
-template <typename Compare, typename Node>
-concept CompareGeneric = requires (Compare cmp, Node lhs, Node rhs) {
+template <typename Compare, typename Key>
+concept CompareGeneric = requires (Compare cmp, Key lhs, Key rhs) {
     { cmp(lhs, rhs) } -> std::same_as<bool>;
 };
 
-template <KeyGeneric _Node>
-class KeyEq {
-public:
-    bool operator () (const _Node& lhs, const _Node& rhs) const {
-        return lhs.key == rhs.key;
-    }
-};
-
-template <KeyGeneric _Node>
-class KeyCompare {
-public:
-    bool operator () (const _Node& lhs, const _Node& rhs) const {
-        return lhs.key < rhs.key;
-    }
-};
-
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq = KeyEq<_Node>, CompareGeneric<_Node> _Compare = KeyCompare<_Node>>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq = std::equal_to<typename _Node::Key>, CompareGeneric<typename _Node::Key> _Compare = std::less<typename _Node::Key>>
 class bst {
 public:
     typedef _Node Node;
+    typedef typename Node::Key Key;
     typedef _Eq Eq;
     typedef _Compare Compare;
 
@@ -65,10 +45,12 @@ protected:
     Node* _root;
 
 public:
-    explicit bst(Eq eq = Eq(), Compare cmp = Compare()): _eq(eq), _cmp(cmp), _root(nullptr) {}
-    ~bst();
+    explicit bst(Eq eq = Eq(), Compare cmp = Compare()): bst(nullptr, eq, cmp) {}
+    ~bst() { destroy(_root); }
 
     [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
+
+    Node* find(const Key& key) const;
 
     Node* insert(Node* node);
     RemoveReport remove(Node* node);
@@ -85,6 +67,7 @@ protected:
 
     static void link_left(Node* parent, Node* child);
     static void link_right(Node* parent, Node* child);
+
     static void update_size(Node* node);
     static void inc_size_path(Node* node);
     static void dec_size_path(Node* node);
@@ -99,23 +82,35 @@ private:
     friend OStream& operator << (OStream& os, const bst<Node, Eq, Compare>& tree);
 };
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
-bst<_Node, _Eq, _Compare>::~bst() {
-    destroy(_root);
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::find(const Key& key) const {
+    auto probe = _root;
+    while (probe != nullptr) {
+        if (_eq(probe->key, key)) {
+            return probe;
+        }
+        if (_cmp(probe->key, key)) {
+            probe = probe->left;
+        }
+        else {
+            probe = probe->right;
+        }
+    }
+    return nullptr;
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node* node) {
     Node* parent = nullptr;
     auto probe = _root;
     bool left_path;
 
     while (probe != nullptr) {
-        if (_eq(*node, *probe)) {
+        if (_eq(node->key, probe->key)) {
             return probe;
         }
         parent = probe;
-        if (_cmp(*node, *parent)) {
+        if (_cmp(node->key, parent->key)) {
             left_path = true;
             probe = parent->left;
         }
@@ -147,7 +142,7 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node
     return node;
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remove(Node* node) {
     auto parent = node->parent;
     bool left_path;
@@ -241,8 +236,8 @@ typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remo
     return {succ, subtree_parent, subtree_child};
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
-typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::pred(const Node* node) {
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::pred(const Node* node) {  // FIXME: succ
     if (node->left != nullptr) {
         auto probe = node->left;
         while (probe->right != nullptr) {
@@ -261,8 +256,8 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::pred(const 
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
-typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const Node* node) {
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const Node* node) {  // FIXME: pred
     if (node->right != nullptr) {
         auto probe = node->right;
         while (probe->left != nullptr) {
@@ -281,7 +276,7 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const 
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::link_left(Node* parent, Node* child) {
     if (parent != nullptr) {
         parent->left = child;
@@ -291,7 +286,7 @@ void bst<_Node, _Eq, _Compare>::link_left(Node* parent, Node* child) {
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::link_right(Node* parent, Node* child) {
     if (parent != nullptr) {
         parent->right = child;
@@ -301,7 +296,7 @@ void bst<_Node, _Eq, _Compare>::link_right(Node* parent, Node* child) {
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::update_size(Node* node) {
     if (node != nullptr) {
         auto left_size = node->left != nullptr ? node->left->size : 0;
@@ -310,21 +305,21 @@ void bst<_Node, _Eq, _Compare>::update_size(Node* node) {
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::inc_size_path(Node* node) {
     for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
         ++(ancestor->size);
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::dec_size_path(Node* node) {
     for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
         --(ancestor->size);
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::destroy(Node* node) {
     if (node != nullptr) {
         destroy(node->left);
@@ -333,7 +328,7 @@ void bst<_Node, _Eq, _Compare>::destroy(Node* node) {
     }
 }
 
-template <NodeGeneric _Node, EqGeneric<_Node> _Eq, CompareGeneric<_Node> _Compare>
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 template <typename OStream>
 void bst<_Node, _Eq, _Compare>::print(OStream& os, const Node* node) const {
     if (node != nullptr) {
