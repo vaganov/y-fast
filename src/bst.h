@@ -49,8 +49,13 @@ public:
     ~bst() { destroy(_root); }
 
     [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
+    const Key& sample() const;
+    const Key& min() const;
+    const Key& max() const;
 
     Node* find(const Key& key) const;
+    Node* pred(const Key& key) const;
+    Node* succ(const Key& key) const;
 
     Node* insert(Node* node);
     RemoveReport remove(Node* node);
@@ -62,6 +67,8 @@ protected:
         }
     }
 
+    static Node* rightmost(Node* node);
+    static Node* leftmost(Node* node);
     static Node* pred(const Node* node);
     static Node* succ(const Node* node);
 
@@ -83,7 +90,34 @@ private:
 };
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
-bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::find(const Key& key) const {
+const typename bst<_Node, _Eq, _Compare>::Key& bst<_Node, _Eq, _Compare>::sample() const {
+    if (_root != nullptr) {
+        return _root->key;
+    }
+    static const auto default_key = Key();
+    return default_key;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+const typename bst<_Node, _Eq, _Compare>::Key& bst<_Node, _Eq, _Compare>::min() const {
+    if (_root != nullptr) {
+        return leftmost(_root)->key;
+    }
+    static const auto default_key = Key();
+    return default_key;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+const typename bst<_Node, _Eq, _Compare>::Key& bst<_Node, _Eq, _Compare>::max() const {
+    if (_root != nullptr) {
+        return rightmost(_root)->key;
+    }
+    static const auto default_key = Key();
+    return default_key;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::find(const Key& key) const {
     auto probe = _root;
     while (probe != nullptr) {
         if (_eq(probe->key, key)) {
@@ -100,6 +134,28 @@ bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::find(const Key& key)
 }
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::pred(const Key& key) const {
+    auto probe = _root;
+    Node* parent = nullptr;
+    while (probe != nullptr) {
+        parent = probe;
+        probe = _cmp(key, parent->key) ? parent->right : parent->left;
+    }
+    return parent;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const Key& key) const {
+    auto probe = _root;
+    Node* parent = nullptr;
+    while (probe != nullptr) {
+        parent = probe;
+        probe = _cmp(parent->key, key) ? parent->left : parent->right;
+    }
+    return parent;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node* node) {
     Node* parent = nullptr;
     auto probe = _root;
@@ -107,7 +163,7 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node
 
     while (probe != nullptr) {
         if (_eq(node->key, probe->key)) {
-            return probe;
+            return probe;  // TODO: replace?
         }
         parent = probe;
         if (_cmp(node->key, parent->key)) {
@@ -237,43 +293,51 @@ typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remo
 }
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
-typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::pred(const Node* node) {  // FIXME: succ
-    if (node->left != nullptr) {
-        auto probe = node->left;
-        while (probe->right != nullptr) {
-            probe = probe->right;
-        }
-        return probe;
+bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::rightmost(Node* node) {
+    auto probe = node;
+    while (probe->right != nullptr) {
+        probe = probe->right;
     }
-    else {
-        auto probe = node;
-        auto parent = probe->parent;
-        while (parent != nullptr && probe == parent->left) {
-            probe = parent;
-            parent = probe->parent;
-        }
-        return parent;
-    }
+    return probe;
 }
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
-typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const Node* node) {  // FIXME: pred
+bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::leftmost(Node* node) {
+    auto probe = node;
+    while (probe->left != nullptr) {
+        probe = probe->left;
+    }
+    return probe;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::pred(const Node* node) {
+    if (node->left != nullptr) {
+        return rightmost(node->left);
+    }
+    auto probe = node->parent;
+    if (probe == nullptr) {
+        return nullptr;
+    }
+    while (probe->parent != nullptr && probe == probe->parent->right) {
+        probe = probe->parent;
+    }
+    return probe;
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const Node* node) {
     if (node->right != nullptr) {
-        auto probe = node->right;
-        while (probe->left != nullptr) {
-            probe = probe->left;
-        }
-        return probe;
+        return leftmost(node->right);
     }
-    else {
-        auto probe = node;
-        auto parent = probe->parent;
-        while (parent != nullptr && probe == parent->right) {
-            probe = parent;
-            parent = probe->parent;
-        }
-        return parent;
+    auto probe = node->parent;
+    if (probe == nullptr) {
+        return nullptr;
     }
+    while (probe->parent != nullptr && probe == probe->parent->left) {
+        probe = probe->parent;
+    }
+    return probe;
 }
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>

@@ -67,8 +67,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node
         }
         auto grand_parent = parent->parent;
         Node* new_subroot;
-        auto left_path = (probe == parent->left);
-        if (left_path) {
+        if (probe == parent->left) {
             if (parent->balance_factor < 0) {
                 if (probe->balance_factor > 0) {
                     new_subroot = rotate_left_right(parent, probe);
@@ -109,7 +108,7 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node
             }
         }
         if (grand_parent != nullptr) {
-            if (left_path) {
+            if (parent == grand_parent->left) {
                 link_left(grand_parent, new_subroot);
             }
             else {
@@ -136,8 +135,8 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::remove(Node
         int sibling_balance_factor;
         auto grand_parent = parent->parent;
         if (new_subroot == parent->left) {
-            if (parent->balance_factor > 0) {
-                auto sibling = parent->right;
+            auto sibling = parent->right;
+            if (parent->balance_factor > 0 && sibling != nullptr) {
                 sibling_balance_factor = sibling->balance_factor;
                 if (sibling_balance_factor < 0) {
                     new_subroot = rotate_right_left(parent, sibling);
@@ -158,8 +157,8 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::remove(Node
             }
         }
         else {
-            if (parent->balance_factor < 0) {
-                auto sibling = parent->left;
+            auto sibling = parent->left;
+            if (parent->balance_factor < 0 && sibling != nullptr) {
                 sibling_balance_factor = sibling->balance_factor;
                 if (sibling_balance_factor > 0) {
                     new_subroot = rotate_left_right(parent, sibling);
