@@ -1,17 +1,14 @@
-#ifndef _YFAST_AVL_H
-#define _YFAST_AVL_H
+#ifndef _YFAST_IMPL_AVL_H
+#define _YFAST_IMPL_AVL_H
 
-#include <concepts>
 #include <functional>
 
-#include <bst.h>
+#include <yfast/internal/concepts.h>
+#include <yfast/impl/bst.h>
 
-namespace yfast {
+namespace yfast::impl {
 
-template <typename Node>
-concept SelfBalancedNodeGeneric = NodeGeneric<Node> && requires (Node node) {
-    { node.balance_factor } -> std::convertible_to<int>;
-};
+using internal::SelfBalancedNodeGeneric;
 
 template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq = std::equal_to<typename _Node::Key>, CompareGeneric<typename _Node::Key> _Compare = std::less<typename _Node::Key>>
 class avl: public bst<_Node, _Eq, _Compare> {
@@ -37,7 +34,7 @@ public:
     Node* insert(Node* node);
     Node* remove(Node* node);
 
-    SplitResult split();  // TODO: move to 'bsl'
+    SplitResult split();
 
 protected:
     explicit avl(Node* root, Eq eq = Eq(), Compare cmp = Compare()): bst<_Node, _Eq, _Compare>(root, eq, cmp) {}

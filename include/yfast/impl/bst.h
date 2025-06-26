@@ -1,29 +1,15 @@
-#ifndef _YFAST_BST_H
-#define _YFAST_BST_H
+#ifndef _YFAST_IMPL_BST_H
+#define _YFAST_IMPL_BST_H
 
-#include <concepts>
 #include <functional>
 
-namespace yfast {
+#include <yfast/internal/concepts.h>
 
-template <typename Node>
-concept NodeGeneric = requires (Node node) {
-    { node.key } -> std::convertible_to<typename Node::Key>;
-    { node.parent } -> std::convertible_to<Node*>;
-    { node.left } -> std::convertible_to<Node*>;
-    { node.right } -> std::convertible_to<Node*>;
-    { node.size } -> std::convertible_to<unsigned int>;
-};
+namespace yfast::impl {
 
-template <typename Eq, typename Key>
-concept EqGeneric = requires (Eq eq, Key lhs, Key rhs) {
-    { eq(lhs, rhs) } -> std::same_as<bool>;
-};
-
-template <typename Compare, typename Key>
-concept CompareGeneric = requires (Compare cmp, Key lhs, Key rhs) {
-    { cmp(lhs, rhs) } -> std::same_as<bool>;
-};
+using internal::NodeGeneric;
+using internal::EqGeneric;
+using internal::CompareGeneric;
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq = std::equal_to<typename _Node::Key>, CompareGeneric<typename _Node::Key> _Compare = std::less<typename _Node::Key>>
 class bst {
