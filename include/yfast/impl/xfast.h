@@ -1,26 +1,11 @@
 #ifndef _YFAST_IMPL_XFAST_H
 #define _YFAST_IMPL_XFAST_H
 
-#include <algorithm>
-#include <cstddef>
 #include <functional>
-#include <string_view>
 #include <unordered_map>
-#include <vector>
 
 #include <yfast/internal/concepts.h>
 #include <yfast/impl/bit_extractor.h>
-
-namespace std {
-
-template <>
-struct hash<vector<byte>> {
-    size_t operator()(const vector<byte>& array) const noexcept {
-        return hash<string_view>{}({reinterpret_cast<const char*>(array.data()), array.size()});
-    }
-};
-
-}
 
 namespace yfast::impl {
 
@@ -28,7 +13,7 @@ using internal::LeafGeneric;
 using internal::MapGeneric;
 using internal::BitExtractorGeneric;
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash = std::unordered_map<typename _Leaf::Key, void*>, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor = BitExtractor<typename _Leaf::Key>, typename _Eq = std::equal_to<typename _Leaf::Key>, typename _Compare = std::less<typename _Leaf::Key>>
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor = BitExtractor<typename _Leaf::Key>, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash = std::unordered_map<typename _BitExtractor::ShiftResult, void*>, typename _Eq = std::equal_to<typename _Leaf::Key>, typename _Compare = std::less<typename _Leaf::Key>>
 class xfast_trie {
 public:
     typedef _Leaf Leaf;
@@ -65,18 +50,18 @@ private:
     static void destroy(Node* node);
 };
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::find(const Key& key) const {
-    if (_hash[0].contains(key)) {
-        return static_cast<Leaf*>(_hash[0].at(key));
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::find(const Key& key) const {
+    if (_hash[0].contains(_bx.shift(key, 0))) {
+        return static_cast<Leaf*>(_hash[0].at(_bx.shift(key, 0)));
     }
     else {
         return nullptr;
     }
 }
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::pred(const Key& key) const {
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::pred(const Key& key) const {
     auto guess = approx(key);
     if (guess == nullptr) {
         return nullptr;
@@ -84,8 +69,8 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
     return _cmp(key, guess->key) ? guess->prv : guess;
 }
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::succ(const Key& key) const {
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::succ(const Key& key) const {
     auto guess = approx(key);
     if (guess == nullptr) {
         return nullptr;
@@ -93,8 +78,8 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
     return _cmp(guess->key, key) ? guess->nxt : guess;
 }
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::insert(Leaf* leaf) {
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::insert(Leaf* leaf) {
     Leaf* prv = nullptr;
     Leaf* nxt = nullptr;
     auto guess = approx(leaf->key);
@@ -162,13 +147,13 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
         }
     }
 
-    _hash[0][leaf->key] = static_cast<void*>(leaf);
+    _hash[0][_bx.shift(leaf->key, 0)] = static_cast<void*>(leaf);
 
     return leaf;
 }
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::remove(Leaf* leaf) {
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::remove(Leaf* leaf) {
     auto prv = leaf->prv;
     auto nxt = leaf->nxt;
 
@@ -178,7 +163,7 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
     if (nxt != nullptr) {
         nxt->prv = prv;
     }
-    _hash[0].erase(leaf->key);
+    _hash[0].erase(_bx.shift(leaf->key, 0));
 
     auto subtree_removed = true;
     for (auto h = 1; h < H; ++h) {
@@ -231,8 +216,8 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
     return leaf;
 }
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::approx(const Key& key) const {
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::approx(const Key& key) const {
     if (_root == nullptr) {
         return nullptr;
     }
@@ -258,7 +243,7 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
     }
 
     if (m == 0) {
-        void* p = _hash[0].at(key);
+        void* p = _hash[0].at(_bx.shift(key, 0));
         return static_cast<Leaf*>(p);
     }
     if (m == H) {
@@ -269,8 +254,8 @@ typename xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* xfast_
     return node->descendant;
 }
 
-template <unsigned int H, LeafGeneric _Leaf, MapGeneric<typename _Leaf::Key, void*> _Hash, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, typename _Eq, typename _Compare>
-void xfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::destroy(Node* node) {
+template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
+void xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::destroy(Node* node) {
     if (node != nullptr) {
         destroy(node->left);
         destroy(node->right);

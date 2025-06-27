@@ -47,7 +47,7 @@ concept MapGeneric = requires (Map map, Key key) {
 template <typename BitExtractor, typename Key>
 concept BitExtractorGeneric = requires (BitExtractor bx, Key key, unsigned int n) {
     { bx.extract_bit(key, n) } -> std::convertible_to<bool>;
-    { bx.shift(key, n) } -> std::convertible_to<Key>;
+    { bx.shift(key, n) } -> std::convertible_to<typename BitExtractor::ShiftResult>;
 };
 
 }

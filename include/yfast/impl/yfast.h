@@ -1,15 +1,16 @@
-#ifndef _YFAST_YFAST_H
-#define _YFAST_YFAST_H
+#ifndef _YFAST_IMPL_YFAST_H
+#define _YFAST_IMPL_YFAST_H
 
 #include <functional>
 #include <unordered_map>
 
-#include <avl.h>
-#include <xfast.h>
+#include <yfast/impl/avl.h>
+#include <yfast/impl/xfast.h>
+#include <yfast/impl/bit_extractor.h>
 
-namespace yfast {
+namespace yfast::impl {
 
-template <unsigned int H, SelfBalancedNodeGeneric _Leaf, typename _Hash = std::unordered_map<typename _Leaf::Key, void*>, typename _BitExtractor = BitExtractor<typename _Leaf::Key>, typename _Eq = std::equal_to<typename _Leaf::Key>, typename _Compare = std::less<typename _Leaf::Key>>
+template <unsigned int H, SelfBalancedNodeGeneric _Leaf, typename _BitExtractor = BitExtractor<typename _Leaf::Key>, typename _Hash = std::unordered_map<typename _BitExtractor::ShiftResult, void*>, typename _Eq = std::equal_to<typename _Leaf::Key>, typename _Compare = std::less<typename _Leaf::Key>>
 class yfast_trie {
 public:
     typedef _Leaf Leaf;
@@ -26,41 +27,50 @@ protected:
         XTrieLeaf* nxt;
     };
 
+    static constexpr auto TREE_SPLIT_THRESHOLD = 2 * H;
+    static constexpr auto TREE_MERGE_THRESHOLD = H / 4;
+
 public:
-    typedef typename XTrieLeaf::Value bst;
+    typedef struct {
+        typename XTrieLeaf::Value* tree;
+        Leaf* leaf;
+    } FindReport;
 
 private:
     _BitExtractor _bx;
     _Eq _eq;
     _Compare _cmp;
-    xfast_trie<H, XTrieLeaf, _Hash, _BitExtractor, _Eq, _Compare> _trie;
+    xfast_trie<H, XTrieLeaf, _BitExtractor, _Hash, _Eq, _Compare> _trie;
 
 public:
     explicit yfast_trie(_BitExtractor bx = _BitExtractor(), _Eq eq = _Eq(), _Compare cmp = _Compare()): _eq(eq), _cmp(cmp), _trie(bx, eq, cmp) {}
 
-    Leaf* find(const Key& key) const;
+    FindReport find(const Key& key) const;
 
     Leaf* insert(Leaf* leaf);
 };
 
-template <unsigned int H, SelfBalancedNodeGeneric _Leaf, typename _Hash, typename _BitExtractor, typename _Eq, typename _Compare>
-yfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* yfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::find(const Key& key) const {
+template <unsigned int H, SelfBalancedNodeGeneric _Leaf, typename _BitExtractor, typename _Hash, typename _Eq, typename _Compare>
+typename yfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::FindReport yfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::find(const Key& key) const {
     auto pred = _trie.pred(key);
     if (pred != nullptr) {
         auto leaf = pred->value.find(key);
         if (leaf != nullptr) {
-            return leaf;
+            return {&pred->value, leaf};
         }
     }
     auto succ = (pred != nullptr) ? pred->nxt : _trie.succ(key);
     if (succ != nullptr) {
-        return succ->value.find(key);
+        auto leaf = succ->value.find(key);
+        if (leaf != nullptr) {
+            return {&pred->value, leaf};
+        }
     }
-    return nullptr;
+    return {nullptr, nullptr};
 }
 
-template <unsigned int H, SelfBalancedNodeGeneric _Leaf, typename _Hash, typename _BitExtractor, typename _Eq, typename _Compare>
-typename yfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* yfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::insert(Leaf* leaf) {
+template <unsigned int H, SelfBalancedNodeGeneric _Leaf, typename _BitExtractor, typename _Hash, typename _Eq, typename _Compare>
+typename yfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* yfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::insert(Leaf* leaf) {
     auto pred = _trie.pred(leaf->key);
     auto succ = (pred != nullptr) ? pred->nxt : _trie.succ(leaf->key);
     XTrieLeaf* xleaf;
@@ -84,7 +94,7 @@ typename yfast_trie<H, _Leaf, _Hash, _BitExtractor, _Eq, _Compare>::Leaf* yfast_
     }
 
     xleaf->value.insert(leaf);
-    if (xleaf->value.size() > 2 * H) {
+    if (xleaf->value.size() > TREE_SPLIT_THRESHOLD) {
         _trie.remove(xleaf);
         auto split_result = xleaf->value.split();
         _trie.insert(new XTrieLeaf(split_result.left.sample(), split_result.left));

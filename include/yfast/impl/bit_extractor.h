@@ -2,29 +2,34 @@
 #define _YFAST_IMPL_BIT_EXTRACTOR_H
 
 #include <cstddef>
-#include <cstdint>
+#include <string>
+#include <type_traits>
 #include <vector>
+
+#include <yfast/internal/hash.h>
 
 namespace yfast::impl {
 
-template <typename Key>
+template <typename Key, typename = void>
 class BitExtractor;
 
-template <>
-class BitExtractor<std::uint64_t> {
+template <typename Key>
+class BitExtractor<Key, std::enable_if_t<std::is_integral_v<Key>>> {
 public:
-    static bool extract_bit(std::uint64_t key, unsigned int n) { return key & (1 << n); }
-    static std::uint64_t shift(std::uint64_t key, unsigned int n) { return key >> n; }
+    typedef Key ShiftResult;
+
+    static bool extract_bit(Key key, unsigned int n) { return key & (1 << n); }
+    static Key shift(Key key, unsigned int n) { return key >> n; }
 };
 
 template <>
 class BitExtractor<std::vector<std::byte>> {
 public:
+    typedef std::vector<std::byte> ShiftResult;
+
     static bool extract_bit(const std::vector<std::byte>& key, unsigned int n);
     static std::vector<std::byte> shift(const std::vector<std::byte>& key, unsigned int n);
 };
-
-// TODO: BitExtractor<std::string>?
 
 inline bool BitExtractor<std::vector<std::byte>>::extract_bit(const std::vector<std::byte>& key, unsigned int n) {
     const auto s = n / 8;
@@ -63,6 +68,31 @@ inline std::vector<std::byte> BitExtractor<std::vector<std::byte>>::shift(const 
         shifted[i] |= key[i + s - 1] << l;
     }
     return shifted;
+}
+
+template <>
+class BitExtractor<std::string> {
+public:
+    typedef std::vector<std::byte> ShiftResult;
+
+    static bool extract_bit(const std::string& key, unsigned int n);
+    static std::vector<std::byte> shift(const std::string& key, unsigned int n);
+};
+
+inline bool BitExtractor<std::string>::extract_bit(const std::string& key, unsigned int n) {
+    const std::vector array(
+        reinterpret_cast<const std::byte*>(key.data()),
+        reinterpret_cast<const std::byte*>(key.data() + key.size())
+    );
+    return BitExtractor<std::vector<std::byte>>::extract_bit(array, n);
+}
+
+inline std::vector<std::byte> BitExtractor<std::string>::shift(const std::string& key, unsigned int n) {
+    const std::vector array(
+        reinterpret_cast<const std::byte*>(key.data()),
+        reinterpret_cast<const std::byte*>(key.data() + key.size())
+    );
+    return BitExtractor<std::vector<std::byte>>::shift(array, n);
 }
 
 }
