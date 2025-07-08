@@ -1,230 +1,388 @@
 #ifndef _YFAST_IMPL_XFAST_H
 #define _YFAST_IMPL_XFAST_H
 
-#include <functional>
-#include <unordered_map>
+#include <yfast/internal/aligned.h>
 
-#include <yfast/internal/concepts.h>
-#include <yfast/impl/bit_extractor.h>
+// #define DEBUG
 
 namespace yfast::impl {
 
-using internal::LeafGeneric;
-using internal::MapGeneric;
-using internal::BitExtractorGeneric;
-
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor = BitExtractor<typename _Leaf::Key>, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash = std::unordered_map<typename _BitExtractor::ShiftResult, void*>, typename _Eq = std::equal_to<typename _Leaf::Key>, typename _Compare = std::less<typename _Leaf::Key>>
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
 class xfast_trie {
 public:
-    typedef _Leaf Leaf;
+    // typedef Leaf Leaf;
     typedef typename Leaf::Key Key;
 
 protected:
-    struct Node {
-        Node* left;
-        Node* right;
-        Leaf* descendant;
+    typedef enum {EMPTY, MISSED_LEFT, ON_TARGET, MISSED_RIGHT} Missed;
+
+    typedef struct {
+        Leaf* leaf;
+        Missed missed;
+        unsigned int level;
+    } ApproxReport;
+
+    struct Node: private internal::aligned_ptr<2, Leaf> {
+        using internal::aligned_ptr<2, Leaf>::value;
+
+        Node(): internal::aligned_ptr<2, Leaf>() {}
+        Node(std::uintptr_t value): internal::aligned_ptr<2, Leaf>(value) {}
+        Node(Leaf* leaf, bool left_present, bool right_present): internal::aligned_ptr<2, Leaf>(leaf, left_present, right_present) {}
+
+        Leaf* descendant() const { return this->get_ptr(); };
+        [[nodiscard]] bool left_present() const { return this->get_bit(0); };
+        [[nodiscard]] bool right_present() const { return this->get_bit(1); };
+
+        void set_descendant(Leaf* leaf) { this->set_ptr(leaf); };
+        void set_left_present() { this->set_bit(0); };
+        void set_right_present() { this->set_bit(1); };
+        void clear_left_present() { this->clear_bit(0); };
+        void clear_right_present() { this->clear_bit(1); };
     };
 
 private:
-    _BitExtractor _bx;
-    _Eq _eq;
-    _Compare _cmp;
-    Node* _root;
-    _Hash _hash[H];
+    BitExtractor _bx;
+    Node _root;
+    Hash _hash[H];
 
 public:
-    explicit xfast_trie(_BitExtractor bx = _BitExtractor(), _Eq eq = _Eq(), _Compare cmp = _Compare()) : _bx(bx), _eq(eq), _cmp(cmp), _root(nullptr) {}
-    ~xfast_trie() { destroy(_root); }  // TODO: _hash[0]
+    explicit xfast_trie(BitExtractor bx = BitExtractor()): _bx(bx), _root(nullptr, false, false) {}
 
     Leaf* find(const Key& key) const;
     Leaf* pred(const Key& key) const;
     Leaf* succ(const Key& key) const;
 
-    Leaf* insert(Leaf* leaf);
-    Leaf* remove(Leaf* leaf);
+    void insert(Leaf* leaf);
+    void remove(Leaf* leaf);
 
 private:
-    [[nodiscard]] Leaf* approx(const Key& key) const;
-
-    static void destroy(Node* node);
+    ApproxReport approx(const Key& key) const;
 };
 
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::find(const Key& key) const {
-    if (_hash[0].contains(_bx.shift(key, 0))) {
-        return static_cast<Leaf*>(_hash[0].at(_bx.shift(key, 0)));
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
+Leaf* xfast_trie<Leaf, H, BitExtractor, Hash>::find(const Key& key) const {
+    auto key_ = _bx.shift(key, 0);
+    if (_hash[0].contains(key_)) {
+        return reinterpret_cast<Leaf*>(_hash[0].at(key_));
     }
-    else {
-        return nullptr;
-    }
+    return nullptr;
 }
 
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::pred(const Key& key) const {
-    auto guess = approx(key);
-    if (guess == nullptr) {
-        return nullptr;
-    }
-    return _cmp(key, guess->key) ? guess->prv : guess;
-}
-
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::succ(const Key& key) const {
-    auto guess = approx(key);
-    if (guess == nullptr) {
-        return nullptr;
-    }
-    return _cmp(guess->key, key) ? guess->nxt : guess;
-}
-
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::insert(Leaf* leaf) {
-    Leaf* prv = nullptr;
-    Leaf* nxt = nullptr;
-    auto guess = approx(leaf->key);
-    if (guess != nullptr) {
-        if (_eq(guess->key, leaf->key)) {
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
+Leaf* xfast_trie<Leaf, H, BitExtractor, Hash>::pred(const Key& key) const {
+    auto [guess, missed, level] = approx(key);
+    switch (missed) {
+        case EMPTY:
+            return nullptr;
+        case MISSED_LEFT:
             return guess;
-        }
-        if (_cmp(guess->key, leaf->key)) {
+        case ON_TARGET:
+            return guess;
+        case MISSED_RIGHT:
+            return guess->prv;
+    }
+}
+
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
+Leaf* xfast_trie<Leaf, H, BitExtractor, Hash>::succ(const Key& key) const {
+    auto [guess, missed, level] = approx(key);
+    switch (missed) {
+        case EMPTY:
+            return nullptr;
+        case MISSED_LEFT:
+            return guess->nxt;
+        case ON_TARGET:
+            return guess;
+        case MISSED_RIGHT:
+            return guess;
+    }
+}
+
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
+void xfast_trie<Leaf, H, BitExtractor, Hash>::insert(Leaf* leaf) {
+    Leaf* prv;
+    Leaf* nxt;
+    auto [guess, missed, level] = approx(leaf->key);
+    switch (missed) {
+        case EMPTY:
+            _root = Node(leaf, false, false);
+            prv = nullptr;
+            nxt = nullptr;
+            break;
+        case MISSED_LEFT:
             prv = guess;
             nxt = guess->nxt;
-        }
-        else {
+            break;
+        case ON_TARGET:
+            return;
+        case MISSED_RIGHT:
             prv = guess->prv;
             nxt = guess;
-        }
+            break;
     }
 
     leaf->prv = prv;
     leaf->nxt = nxt;
     if (prv != nullptr) {
+#ifdef DEBUG
+        if (prv->key >= leaf->key) {
+            asm("nop");
+        }
+#endif
         prv->nxt = leaf;
     }
     if (nxt != nullptr) {
+#ifdef DEBUG
+        if (nxt->key <= leaf->key) {
+            asm("nop");
+        }
+#endif
         nxt->prv = leaf;
     }
 
-    if (_root != nullptr) {
-        // ...
-    }
-    else {
-        _root = new Node(nullptr, nullptr, leaf);
-    }
+    bool next_bit;
 
-    auto node = _root;
-    for (auto h = H - 1; h > 0; --h) {
-        if (_bx.extract_bit(leaf->key, h)) {
-            if (node->right != nullptr) {
-                if (node->descendant != nullptr) {
-                    if (_cmp(leaf->key, node->descendant->key)) {
-                        node->descendant = leaf;
-                    }
-                }
-            }
-            else {
-                auto new_node = new Node(nullptr, nullptr, leaf);
-                node->right = new_node;
-                _hash[h][_bx.shift(leaf->key, h)] = static_cast<void*>(new_node);
-            }
-            node = node->right;
+    if (level == H) {
+        next_bit = _bx.extract_bit(leaf->key, H - 1);
+        if (next_bit) {
+            _root.set_right_present();
         }
         else {
-            if (node->left != nullptr) {
-                if (node->descendant != nullptr) {
-                    if (_cmp(node->descendant->key, leaf->key)) {
-                        node->descendant = leaf;
+            _root.set_left_present();
+        }
+    }
+
+    next_bit = _bx.extract_bit(leaf->key, level - 1);
+    // next_bit = _bx.extract_bit(leaf->key, level);
+
+    if ((!_root.left_present() && !next_bit) || (!_root.right_present() && next_bit)) {
+        _root.set_descendant(leaf);
+    }
+
+    for (unsigned int h = H - 1; h >= level; --h) {
+    // for (unsigned int h = H - 1; h > level; --h) {
+        auto key_prefix = _bx.shift(leaf->key, h);
+        std::uintptr_t value = _hash[h].at(key_prefix);
+        Node node = value;
+#if 0
+        if ((!node.left_present() && !next_bit) || (!node.right_present() && next_bit)) {
+            node.set_descendant(leaf);
+            _hash[h][key_prefix] = node.value;
+        }
+#else
+        if (!node.left_present()) {
+            if (leaf->key < node.descendant()->key) {  // FIXME
+                node.set_descendant(leaf);
+                _hash[h][key_prefix] = node.value;
+            }
+        }
+        if (!node.right_present()) {
+            if (leaf->key > node.descendant()->key) {  // FIXME
+                node.set_descendant(leaf);
+                _hash[h][key_prefix] = node.value;
+            }
+        }
+#endif
+    }
+
+    // for (unsigned int h = H - 1; h > 0; --h) {
+    // for (unsigned int h = level - 1; h > 0; --h) {
+    for (unsigned int h = std::min(level, H - 1); h > 0; --h) {
+        next_bit = _bx.extract_bit(leaf->key, h - 1);
+        auto key_prefix = _bx.shift(leaf->key, h);
+        if (_hash[h].contains(key_prefix)) {
+            std::uintptr_t value = _hash[h].at(key_prefix);
+            Node node = value;
+            if (next_bit) {
+                node.set_right_present();
+                if (!node.left_present()) {
+                    if (leaf->key < node.descendant()->key) {  // FIXME
+                        node.set_descendant(leaf);
                     }
                 }
             }
             else {
-                auto new_node = new Node(nullptr, nullptr, leaf);
-                node->left = new_node;
-                _hash[h][_bx.shift(leaf->key, h)] = static_cast<void*>(new_node);
+                node.set_left_present();
+                if (!node.right_present()) {
+                    if (leaf->key > node.descendant()->key) {  // FIXME
+                        node.set_descendant(leaf);
+                    }
+                }
             }
-            node = node->left;
+            _hash[h][key_prefix] = node.value;
+        }
+        else {
+            Node node(leaf, !next_bit, next_bit);
+            _hash[h][key_prefix] = node.value;
         }
     }
 
-    _hash[0][_bx.shift(leaf->key, 0)] = static_cast<void*>(leaf);
+    _hash[0][_bx.shift(leaf->key, 0)] = reinterpret_cast<std::uintptr_t>(leaf);
 
-    return leaf;
+#ifdef DEBUG
+    for (unsigned int h = 0; h < H - 1; ++h) {
+        if (_hash[h].size() > 2 * _hash[h + 1].size()) {
+            asm("nop");
+        }
+    }
+    for (unsigned int h = 1; h < H; ++h) {
+        for (const auto& [key, value] : _hash[h]) {
+            Node node = value;
+            if ((!node.left_present() || !node.right_present()) && !_hash[0].contains(node.descendant()->key)) {
+                asm("nop");
+            }
+        }
+    }
+#endif
 }
 
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::remove(Leaf* leaf) {
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
+void xfast_trie<Leaf, H, BitExtractor, Hash>::remove(Leaf* leaf) {
     auto prv = leaf->prv;
     auto nxt = leaf->nxt;
-
     if (prv != nullptr) {
         prv->nxt = nxt;
     }
     if (nxt != nullptr) {
         nxt->prv = prv;
     }
+
+#ifdef DEBUG
+    if (!_hash[0].contains(_bx.shift(leaf->key, 0))) {
+        asm("nop");
+    }
+#endif
     _hash[0].erase(_bx.shift(leaf->key, 0));
 
-    auto subtree_removed = true;
-    for (auto h = 1; h < H; ++h) {
+    bool subtree_removed = true;
+#ifdef DEBUG
+    unsigned int level;
+#endif
+    // for (unsigned int h = 1; subtree_removed && (h < H); ++h) {
+    for (unsigned int h = 1; h < H; ++h) {
         auto key_prefix = _bx.shift(leaf->key, h);
-        void* p = _hash[h].at(key_prefix);
-        auto node = static_cast<Node*>(p);
-        if (_bx.extract_bit(leaf->key, h - 1)) {  // NB
-            node->right = nullptr;
-            if (node->left != nullptr) {
-                subtree_removed = false;
-                node->descendant = nxt;
-                break;
+        std::uintptr_t value = _hash[h].at(key_prefix);
+        Node node = value;
+        if (subtree_removed) {
+            if (_bx.extract_bit(leaf->key, h - 1)) {
+                node.clear_right_present();
+                if (node.left_present()) {
+#ifdef DEBUG
+                    if (_bx.shift(prv->key, h) != key_prefix) {
+                        asm("nop");
+                    }
+#endif
+                    node.set_descendant(prv);
+                    _hash[h][key_prefix] = node.value;
+                    subtree_removed = false;
+#ifdef DEBUG
+                    level = h;
+#endif
+                }
+                else {
+                    _hash[h].erase(key_prefix);
+#ifdef DEBUG
+                    if (_hash[h - 1].size() > 2 * _hash[h].size()) {
+                        asm("nop");
+                    }
+#endif
+                }
+            }
+            else {
+                node.clear_left_present();
+                if (node.right_present()) {
+#ifdef DEBUG
+                    if (_bx.shift(nxt->key, h) != key_prefix) {
+                        asm("nop");
+                    }
+#endif
+                    node.set_descendant(nxt);
+                    _hash[h][key_prefix] = node.value;
+                    subtree_removed = false;
+#ifdef DEBUG
+                    level = h;
+#endif
+                }
+                else {
+                    _hash[h].erase(key_prefix);
+#ifdef DEBUG
+                    if (_hash[h - 1].size() > 2 * _hash[h].size()) {
+                        asm("nop");
+                    }
+#endif
+                }
             }
         }
         else {
-            node->left = nullptr;
-            if (node->right != nullptr) {
-                subtree_removed = false;
-                node->descendant = prv;
-                break;
+            if (node.descendant() == leaf) {
+                if (!node.left_present()) {
+#ifdef DEBUG
+                    if (_bx.shift(nxt->key, h) != key_prefix) {
+                        asm("nop");
+                    }
+#endif
+                    node.set_descendant(nxt);
+                }
+                if (!node.right_present()) {
+#ifdef DEBUG
+                    if (_bx.shift(prv->key, h) != key_prefix) {
+                        asm("nop");
+                    }
+#endif
+                    node.set_descendant(prv);
+                }
+                _hash[h][key_prefix] = node.value;
             }
         }
-        _hash[h].erase(key_prefix);
-        delete node;
     }
 
     if (subtree_removed) {
         if (_bx.extract_bit(leaf->key, H - 1)) {
-            _root->right = nullptr;
-            if (_root->left != nullptr) {
-                _root->descendant = nxt;
+            _root.clear_right_present();
+            if (_root.left_present()) {
+                _root.set_descendant(prv);
             }
             else {
-                delete _root;
-                _root = nullptr;
+                _root.set_descendant(nullptr);
             }
         }
         else {
-            _root->left = nullptr;
-            if (_root->right != nullptr) {
-                _root->descendant = prv;
+            _root.clear_left_present();
+            if (_root.right_present()) {
+                _root.set_descendant(nxt);
             }
             else {
-                delete _root;
-                _root = nullptr;
+                _root.set_descendant(nullptr);
             }
         }
     }
 
-    return leaf;
+#ifdef DEBUG
+    for (unsigned int h = 0; h < H - 1; ++h) {
+        if (_hash[h].size() > 2 * _hash[h + 1].size()) {
+            asm("nop");
+        }
+    }
+    for (unsigned int h = 1; h < H; ++h) {
+        for (const auto& [key, value] : _hash[h]) {
+            Node node = value;
+            if ((!node.left_present() || !node.right_present()) && !_hash[0].contains(node.descendant()->key)) {
+                asm("nop");
+            }
+        }
+    }
+#endif
 }
 
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::approx(const Key& key) const {
-    if (_root == nullptr) {
-        return nullptr;
+template <typename Leaf, unsigned int H, typename BitExtractor, typename Hash>
+typename xfast_trie<Leaf, H, BitExtractor, Hash>::ApproxReport xfast_trie<Leaf, H, BitExtractor, Hash>::approx(const Key& key) const {
+    if (_root.descendant() == nullptr) {
+        return {nullptr, EMPTY, H };
     }
 
-    int l = 0;
-    int r = H;
-    int m;
+    unsigned int l = 0;
+    unsigned int r = H;
+    unsigned int m;
     while (r - l > 1) { // ln H
         m = (r + l) / 2;
         if (_hash[m].contains(_bx.shift(key, m))) {
@@ -234,7 +392,6 @@ typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_
             l = m;
         }
     }
-
     if (_hash[l].contains(_bx.shift(key, l))) {
         m = l;
     }
@@ -243,26 +400,31 @@ typename xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::Leaf* xfast_
     }
 
     if (m == 0) {
-        void* p = _hash[0].at(_bx.shift(key, 0));
-        return static_cast<Leaf*>(p);
+        std::uintptr_t value = _hash[0].at(_bx.shift(key, 0));
+        return {reinterpret_cast<Leaf*>(value), ON_TARGET, 0 };
     }
-    if (m == H) {
-        return _root->descendant;
+
+    Node node;
+    if (m < H) {
+        std::uintptr_t value = _hash[m].at(_bx.shift(key, m));
+        node.value = value;
     }
-    void* p = _hash[m].at(_bx.shift(key, m));
-    Node* node = static_cast<Node*>(p);
-    return node->descendant;
+    else {
+        node = _root;
+    }
+#ifdef DEBUG
+    if (!_hash[0].contains(_bx.shift(node.descendant()->key, 0))) {
+        asm("nop");
+    }
+#endif
+    if (node.left_present()) {
+        return { node.descendant(), MISSED_LEFT, m };
+    }
+    else {
+        return { node.descendant(), MISSED_RIGHT, m };
+    }
 }
 
-template <unsigned int H, LeafGeneric _Leaf, BitExtractorGeneric<typename _Leaf::Key> _BitExtractor, MapGeneric<typename _BitExtractor::ShiftResult, void*> _Hash, typename _Eq, typename _Compare>
-void xfast_trie<H, _Leaf, _BitExtractor, _Hash, _Eq, _Compare>::destroy(Node* node) {
-    if (node != nullptr) {
-        destroy(node->left);
-        destroy(node->right);
-        delete node;
-    }
 }
-
-} // namespace yfast
 
 #endif

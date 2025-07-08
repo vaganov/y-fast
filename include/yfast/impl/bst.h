@@ -1,9 +1,12 @@
 #ifndef _YFAST_IMPL_BST_H
 #define _YFAST_IMPL_BST_H
 
+#include <algorithm>
 #include <functional>
 
 #include <yfast/internal/concepts.h>
+
+// #define DEBUG
 
 namespace yfast::impl {
 
@@ -35,6 +38,9 @@ public:
     ~bst() { destroy(_root); }
 
     [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
+#ifdef WITH_HEIGHT
+    [[nodiscard]] unsigned int height() const { return _root != nullptr ? _root->height : 0; }
+#endif
     const Key& sample() const;
     const Key& min() const;
     const Key& max() const;
@@ -53,6 +59,10 @@ protected:
         }
     }
 
+    bst(bst&& other) noexcept: _eq(other._eq), _cmp(other._cmp), _root(other._root) {
+        other._root = nullptr;
+    }
+
     static Node* rightmost(Node* node);
     static Node* leftmost(Node* node);
     static Node* pred(const Node* node);
@@ -62,8 +72,18 @@ protected:
     static void link_right(Node* parent, Node* child);
 
     static void update_size(Node* node);
+    static void update_size_path(Node* node);
     static void inc_size_path(Node* node);
     static void dec_size_path(Node* node);
+
+#ifdef WITH_HEIGHT
+    static void update_height(Node* node);
+    static void update_height_path(Node* node);
+#endif
+
+#ifdef DEBUG
+    static void check_sanity(const Node* node);
+#endif
 
 private:
     static void destroy(Node* node);
@@ -143,6 +163,10 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const 
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node* node) {
+#ifdef DEBUG
+    print(std::cerr, _root);
+    std::cerr << std::endl;
+#endif
     Node* parent = nullptr;
     auto probe = _root;
     bool left_path;
@@ -166,6 +190,9 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node
     node->left = nullptr;
     node->right = nullptr;
     node->size = 1;
+#ifdef WITH_HEIGHT
+    node->height = 1;
+#endif
 
     if (parent != nullptr) {
         if (left_path) {  // NB: assigned if 'parent' non-null
@@ -179,7 +206,14 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::insert(Node
         _root = node;
     }
 
+#ifdef DEBUG
+    check_sanity(_root);
+#endif
+
     inc_size_path(parent);
+#ifdef WITH_HEIGHT
+    update_height_path(parent);
+#endif
 
     return node;
 }
@@ -210,6 +244,9 @@ typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remo
             _root = nullptr;
         }
         dec_size_path(parent);
+#ifdef WITH_HEIGHT
+        update_height_path(parent);
+#endif
         return {nullptr, parent, nullptr};
     }
 
@@ -226,6 +263,9 @@ typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remo
             _root = node->right;
         }
         dec_size_path(parent);
+#ifdef WITH_HEIGHT
+        update_height_path(parent);
+#endif
         return {node->right, parent, node->right};
     }
 
@@ -242,6 +282,9 @@ typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remo
             _root = node->left;
         }
         dec_size_path(parent);
+#ifdef WITH_HEIGHT
+        update_height_path(parent);
+#endif
         return {node->left, parent, node->left};
     }
 
@@ -275,6 +318,9 @@ typename bst<_Node, _Eq, _Compare>::RemoveReport bst<_Node, _Eq, _Compare>::remo
         _root = succ;
     }
     dec_size_path(subtree_parent);
+#ifdef WITH_HEIGHT
+    update_height_path(subtree_parent);
+#endif
     return {succ, subtree_parent, subtree_child};
 }
 
@@ -328,6 +374,13 @@ typename bst<_Node, _Eq, _Compare>::Node* bst<_Node, _Eq, _Compare>::succ(const 
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::link_left(Node* parent, Node* child) {
+#ifdef DEBUG
+    if (parent != nullptr && child != nullptr) {
+        if (child->key > parent->key) {
+            asm("nop");
+        }
+    }
+#endif
     if (parent != nullptr) {
         parent->left = child;
     }
@@ -338,6 +391,13 @@ void bst<_Node, _Eq, _Compare>::link_left(Node* parent, Node* child) {
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::link_right(Node* parent, Node* child) {
+#ifdef DEBUG
+    if (parent != nullptr && child != nullptr) {
+        if (child->key < parent->key) {
+            asm("nop");
+        }
+    }
+#endif
     if (parent != nullptr) {
         parent->right = child;
     }
@@ -356,6 +416,13 @@ void bst<_Node, _Eq, _Compare>::update_size(Node* node) {
 }
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+void bst<_Node, _Eq, _Compare>::update_size_path(Node* node) {
+    for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
+        update_size(ancestor);
+    }
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::inc_size_path(Node* node) {
     for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
         ++(ancestor->size);
@@ -368,6 +435,24 @@ void bst<_Node, _Eq, _Compare>::dec_size_path(Node* node) {
         --(ancestor->size);
     }
 }
+
+#ifdef WITH_HEIGHT
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+void bst<_Node, _Eq, _Compare>::update_height(Node* node) {
+    if (node != nullptr) {
+        auto left_height = node->left != nullptr ? node->left->height : 0;
+        auto right_height = node->right != nullptr ? node->right->height : 0;
+        node->height = 1 + std::max(left_height, right_height);
+    }
+}
+
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+void bst<_Node, _Eq, _Compare>::update_height_path(Node* node) {
+    for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
+        update_height(ancestor);
+    }
+}
+#endif
 
 template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 void bst<_Node, _Eq, _Compare>::destroy(Node* node) {
@@ -382,7 +467,8 @@ template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<
 template <typename OStream>
 void bst<_Node, _Eq, _Compare>::print(OStream& os, const Node* node) const {
     if (node != nullptr) {
-        os << *node;  // NB: requires 'operator <<' for 'Node'
+        // os << *node;  // NB: requires 'operator <<' for 'Node'
+        os << node->key;
         os << " (";
         print(os, node->left);
         os << ", ";
@@ -399,6 +485,22 @@ OStream& operator << (OStream& os, const bst<_Node, _Eq, _Compare>& tree) {
     tree.print(os, tree._root);
     return os << " [size=" << tree.size() << "]";
 }
+
+#ifdef DEBUG
+template <NodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+void bst<_Node, _Eq, _Compare>::check_sanity(const Node* node) {
+    if (node != nullptr) {
+        if (node->left != nullptr && node->key < node->left->key) {
+            asm("nop");
+        }
+        if (node->right != nullptr && node->key > node->right->key) {
+            asm("nop");
+        }
+        check_sanity(node->left);
+        check_sanity(node->right);
+    }
+}
+#endif
 
 }
 

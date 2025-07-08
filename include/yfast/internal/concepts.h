@@ -3,6 +3,8 @@
 
 #include <concepts>
 
+// #define WITH_HEIGHT
+
 namespace yfast::internal {
 
 template <typename Node>
@@ -12,6 +14,9 @@ concept NodeGeneric = requires (Node node) {
     { node.left } -> std::convertible_to<Node*>;
     { node.right } -> std::convertible_to<Node*>;
     { node.size } -> std::convertible_to<unsigned int>;
+#ifdef WITH_HEIGHT
+    { node.height } -> std::convertible_to<unsigned int>;
+#endif
 };
 
 template <typename Node>

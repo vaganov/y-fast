@@ -30,11 +30,13 @@ protected:
 
 public:
     explicit avl(Eq eq = Eq(), Compare cmp = Compare()): avl(nullptr, eq, cmp) {}
+    avl(avl&& other) noexcept: bst<_Node, _Eq, _Compare>(std::move(other)) {}
 
     Node* insert(Node* node);
     Node* remove(Node* node);
 
     SplitResult split();
+    static avl merge(avl& left, avl& right);
 
 protected:
     explicit avl(Node* root, Eq eq = Eq(), Compare cmp = Compare()): bst<_Node, _Eq, _Compare>(root, eq, cmp) {}
@@ -42,6 +44,12 @@ protected:
     using bst<_Node, _Eq, _Compare>::link_left;
     using bst<_Node, _Eq, _Compare>::link_right;
     using bst<_Node, _Eq, _Compare>::update_size;
+    using bst<_Node, _Eq, _Compare>::update_size_path;
+#ifdef WITH_HEIGHT
+    using bst<_Node, _Eq, _Compare>::update_height;
+#endif
+    using bst<_Node, _Eq, _Compare>::leftmost;
+    using bst<_Node, _Eq, _Compare>::rightmost;
 
 private:
     static Node* rotate_left(Node* parent, Node* child);
@@ -51,14 +59,28 @@ private:
 };
 
 template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
-typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node* node) {
+    typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node* node) {
+#ifdef DEBUG
+    this->check_sanity(_root);
+#endif
     auto new_node = this->template bst<_Node, _Eq, _Compare>::insert(node);
+#ifdef DEBUG
+    this->check_sanity(_root);
+#endif
     if (new_node != node) {
         return new_node;
     }
     node->balance_factor = 0;
+#ifdef DEBUG
+    Node* parent;
+#endif
     for (auto probe = node; probe != nullptr; probe = probe->parent) {
+#ifdef DEBUG
+        this->check_sanity(_root);
+        parent = probe->parent;
+#else
         auto parent = probe->parent;
+#endif
         if (parent == nullptr) {
             break;
         }
@@ -118,6 +140,9 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::insert(Node
         }
         break;
     }
+#ifdef DEBUG
+    this->check_sanity(_root);
+#endif
     return node;
 }
 
@@ -210,12 +235,50 @@ typename avl<_Node, _Eq, _Compare>::SplitResult avl<_Node, _Eq, _Compare>::split
 }
 
 template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
+avl<_Node, _Eq, _Compare> avl<_Node, _Eq, _Compare>::merge(avl& left, avl& right) {
+    auto new_subroot = right.leftmost(right._root);
+    right.remove(new_subroot);
+    if ((left.height() >= right.height() - 1) && (left.height() <= right.height() + 1)) {
+        link_left(new_subroot, left._root);
+        link_right(new_subroot, right._root);
+        update_size(new_subroot);
+        update_height(new_subroot);
+        new_subroot->balance_factor = right.height() - left.height();
+        left._root = nullptr;
+        right._root = nullptr;
+        return avl(new_subroot, _eq, _cmp);
+    }
+    if (left.height() > right.height()) {
+        auto probe = left._root;
+        while (probe->height > right.height()) {
+            probe = probe->right;
+        }
+        auto parent = probe->parent;
+        link_left(new_subroot, probe);
+        link_right(new_subroot, right._root);
+        link_right(parent, new_subroot);
+        update_size_path(new_subroot);
+        // ...
+        right._root = nullptr;
+        return left;
+    }
+    else {
+        // ...
+        return right;
+    }
+}
+
+template <SelfBalancedNodeGeneric _Node, EqGeneric<typename _Node::Key> _Eq, CompareGeneric<typename _Node::Key> _Compare>
 typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_left(Node* parent, Node* child) {
     link_right(parent, child->left);
     link_left(child, parent);
 
     update_size(parent);
     update_size(child);
+#ifdef WITH_HEIGHT
+    update_height(parent);
+    update_height(child);
+#endif
 
     if (child->balance_factor == 0) {
         parent->balance_factor = 1;
@@ -236,6 +299,10 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_righ
 
     update_size(parent);
     update_size(child);
+#ifdef WITH_HEIGHT
+    update_height(parent);
+    update_height(child);
+#endif
 
     if (child->balance_factor == 0) {
         parent->balance_factor = -1;
@@ -261,6 +328,11 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_righ
     update_size(parent);
     update_size(child);
     update_size(grand_child);
+#ifdef WITH_HEIGHT
+    update_height(parent);
+    update_height(child);
+    update_height(grand_child);
+#endif
 
     if (grand_child->balance_factor == 0) {
         parent->balance_factor = 0;
@@ -291,6 +363,11 @@ typename avl<_Node, _Eq, _Compare>::Node* avl<_Node, _Eq, _Compare>::rotate_left
     update_size(parent);
     update_size(child);
     update_size(grand_child);
+#ifdef WITH_HEIGHT
+    update_height(parent);
+    update_height(child);
+    update_height(grand_child);
+#endif
 
     if (grand_child->balance_factor == 0) {
         parent->balance_factor = 0;
