@@ -27,47 +27,52 @@ class BitExtractor<std::vector<std::byte>> {
 public:
     typedef std::vector<std::byte> ShiftResult;
 
+    static bool extract_bit(const std::byte* data, std::size_t size, unsigned int n);
     static bool extract_bit(const std::vector<std::byte>& key, unsigned int n);
+    static std::vector<std::byte> shift(const std::byte* data, std::size_t size, unsigned int n);
     static std::vector<std::byte> shift(const std::vector<std::byte>& key, unsigned int n);
 };
 
-inline bool BitExtractor<std::vector<std::byte>>::extract_bit(const std::vector<std::byte>& key, unsigned int n) {
+inline bool BitExtractor<std::vector<std::byte>>::extract_bit(const std::byte* data, std::size_t size, unsigned int n) {
     const auto s = n / 8;
-    if (key.size() <= s) {
+    if (size <= s) {
         return false;
     }
     const auto r = n % 8;
     const auto mask = std::byte{1} << r;
-    // return (key[s] & mask) != std::byte{0};
-    return (key[key.size() - s - 1] & mask) != std::byte{0};
+    return (data[size - s - 1] & mask) != std::byte{0};
+}
+
+inline bool BitExtractor<std::vector<std::byte>>::extract_bit(const std::vector<std::byte>& key, unsigned int n) {
+    return extract_bit(key.data(), key.size(), n);
 }
 
 // [l | r] [l | r] [l | r]
 // [l] [r | l] [r | l]
-inline std::vector<std::byte> BitExtractor<std::vector<std::byte>>::shift(const std::vector<std::byte>& key, unsigned int n) {
+inline std::vector<std::byte> BitExtractor<std::vector<std::byte>>::shift(const std::byte* data, std::size_t size, unsigned int n) {
     const auto s = n / 8;
-    if (key.size() <= s) {
+    if (size <= s) {
         return {};
     }
 
-    const auto shifted_size = key.size() - s;
+    const auto shifted_size = size - s;
     std::vector<std::byte> shifted(shifted_size);
     const auto r = n % 8;
     if (r == 0) {
-        std::ranges::copy(key.begin() + s, key.end(), shifted.begin());
+        std::ranges::copy(data + s, data + size, shifted.begin());
         return shifted;
     }
 
     const auto l = 8 - r;
-    // shifted[0] = key[s] >> r;
-    // for (int i = 1; i < shifted_size; ++i) {
-    //     shifted[i] = (key[i + s - 1] << l) | (key[i + s] >> r);
-    // }
-    std::transform(key.begin() + s, key.end(), shifted.begin(), [r] (std::byte b) { return b >> r; });
+    std::transform(data + s, data + size, shifted.begin(), [r] (std::byte b) { return b >> r; });
     for (int i = 1; i < shifted_size; ++i) {
-        shifted[i] |= key[i + s - 1] << l;
+        shifted[i] |= data[i + s - 1] << l;
     }
     return shifted;
+}
+
+inline std::vector<std::byte> BitExtractor<std::vector<std::byte>>::shift(const std::vector<std::byte>& key, unsigned int n) {
+    return shift(key.data(), key.size(), n);
 }
 
 template <>
@@ -80,19 +85,13 @@ public:
 };
 
 inline bool BitExtractor<std::string>::extract_bit(const std::string& key, unsigned int n) {
-    const std::vector array(
-        reinterpret_cast<const std::byte*>(key.data()),
-        reinterpret_cast<const std::byte*>(key.data() + key.size())
-    );
-    return BitExtractor<std::vector<std::byte>>::extract_bit(array, n);
+    auto data = reinterpret_cast<const std::byte*>(key.data());
+    return BitExtractor<std::vector<std::byte>>::extract_bit(data, key.size(), n);
 }
 
 inline std::vector<std::byte> BitExtractor<std::string>::shift(const std::string& key, unsigned int n) {
-    const std::vector array(
-        reinterpret_cast<const std::byte*>(key.data()),
-        reinterpret_cast<const std::byte*>(key.data() + key.size())
-    );
-    return BitExtractor<std::vector<std::byte>>::shift(array, n);
+    auto data = reinterpret_cast<const std::byte*>(key.data());
+    return BitExtractor<std::vector<std::byte>>::shift(data, key.size(), n);
 }
 
 }
