@@ -239,16 +239,7 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
     new_subroot->parent = nullptr;
     const auto left_height = left.height();
     const auto right_height = right.height();
-    if ((left_height + 1 >= right_height) && (left_height <= right_height + 1)) {
-        link_left(new_subroot, left._root);
-        link_right(new_subroot, right._root);
-        update_size(new_subroot);
-        new_subroot->balance_factor = right_height - left_height;
-        left._root = nullptr;
-        right._root = nullptr;
-        return AVL(new_subroot, left._cmp);
-    }
-    if (left_height > right_height) {
+    if (left_height > right_height + 1) {
         auto probe = _rightmost(left._root);
         int probe_height = height(probe);
         while (probe_height < right_height) {
@@ -311,7 +302,7 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
         right._root = nullptr;
         return std::move(left);
     }
-    else {
+    if (right_height > left_height + 1) {
         auto probe = _leftmost(right._root);
         int probe_height = height(probe);
         while (probe_height < left_height) {
@@ -374,6 +365,14 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
         left._root = nullptr;
         return std::move(right);
     }
+
+    link_left(new_subroot, left._root);
+    link_right(new_subroot, right._root);
+    update_size(new_subroot);
+    new_subroot->balance_factor = right_height - left_height;
+    left._root = nullptr;
+    right._root = nullptr;
+    return AVL(new_subroot, left._cmp);
 }
 
 template <typename Node, typename Compare>
