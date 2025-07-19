@@ -5,8 +5,6 @@
 
 #include <yfast/impl/xfast.h>
 
-#define DEBUG
-
 namespace yfast::internal {
 
 template <typename Key, typename Value>
@@ -15,9 +13,6 @@ struct XFastLeaf: public XFastLeafBase<Key, XFastLeaf<Key, Value>> {
 
     explicit XFastLeaf(const Key& key, Value&& value): XFastLeafBase<Key, XFastLeaf>(key), value(std::move(value)) {}
     XFastLeaf(XFastLeaf&& other) noexcept: XFastLeafBase<Key, XFastLeaf>(other), value(std::move(other.value)) {  // TODO: remove
-#ifdef DEBUG
-        asm("nop");
-#endif
     }
 };
 

@@ -5,11 +5,7 @@
 
 #include <yfast/internal/concepts.h>
 #include <yfast/impl/avl.h>
-#if INTERNAL_XLEAF
-#include <yfast/impl/xfast.h>
-#else
 #include <yfast/internal/yfast.h>
-#endif
 
 namespace yfast::impl {
 
@@ -18,17 +14,7 @@ class YFastTrie {
 public:
     typedef typename Leaf::Key Key;
     typedef AVL<Leaf, Compare> Value;
-
-#if INTERNAL_XLEAF
-    struct XFastLeaf: public internal::XFastLeafBase<Key, XFastLeaf> {  // TODO: move out, parametrize allocator
-        Value value;
-
-        explicit XFastLeaf(const Key& key, Value&& value): internal::XFastLeafBase<Key, XFastLeaf>(key), value(std::move(value)) {}
-        XFastLeaf(XFastLeaf&& other) noexcept: internal::XFastLeafBase<Key, XFastLeaf>(std::move(other)), value(std::move(other.value)) {}
-    };
-#else
     typedef internal::XFastLeaf<Key, Value> XFastLeaf;
-#endif
 
 private:
     static constexpr auto TREE_SPLIT_THRESHOLD = 2 * H;
@@ -96,15 +82,6 @@ typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, 
             return { this, succ, leaf };
         }
     }
-#ifdef DEBUG
-    int cnt = 0;
-    for (auto p = _trie.leftmost(); p != nullptr; p = p->nxt) {
-        if (p->value.find(key) != nullptr) {
-            asm("nop");
-        }
-        ++cnt;
-    }
-#endif
     return { this, nullptr, nullptr };
 }
 
@@ -160,17 +137,6 @@ typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, 
     }
 
     ++_size;
-#ifdef DEBUG
-    int cnt = 0;
-    std::size_t size = 0;
-    for (auto p = _trie.leftmost(); p != nullptr; p = p->nxt) {
-        ++cnt;
-        size += p->value.size();
-    }
-    if (size != _size) {
-        asm("nop");
-    }
-#endif
 
     return { this, xleaf, leaf };  // TODO: return replaced leaf
 }
@@ -191,29 +157,7 @@ void YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf, XFastLe
         if (neighbor != nullptr) {
             _trie.remove(xleaf);
             _trie.remove(neighbor);
-#if 1
-#ifdef DEBUG
-            auto size = xleaf->value.size() + neighbor->value.size();
-#endif
             auto merged = Value::merge(std::move(xleaf->value), std::move(neighbor->value));  // TODO: split if necessary
-#ifdef DEBUG
-            if (merged.size() != size) {
-                asm("nop");
-            }
-#endif
-#else
-            Value merged;
-            while (xleaf->value.size() > 0) {
-                auto node = const_cast<Leaf*>(xleaf->value.leftmost());
-                xleaf->value.remove(node);
-                merged.insert(node);
-            }
-            while (neighbor->value.size() > 0) {
-                auto node = const_cast<Leaf*>(neighbor->value.leftmost());
-                neighbor->value.remove(node);
-                merged.insert(node);
-            }
-#endif
             _trie.insert(new XFastLeaf(merged.root()->key, std::move(merged)));
             delete xleaf;
             delete neighbor;
@@ -232,17 +176,6 @@ void YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf, XFastLe
     }
 
     --_size;
-#ifdef DEBUG
-    int cnt = 0;
-    std::size_t size = 0;
-    for (auto p = _trie.leftmost(); p != nullptr; p = p->nxt) {
-        ++cnt;
-        size += p->value.size();
-    }
-    if (size != _size) {
-        asm("nop");
-    }
-#endif
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>

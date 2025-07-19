@@ -3,8 +3,6 @@
 
 #include <functional>
 
-#define DEBUG
-
 namespace yfast::impl {
 
 template <typename Node, typename Compare = std::less<typename Node::Key>>
@@ -69,18 +67,6 @@ protected:
 // private:
     static void destroy(Node* node);
 
-#ifdef DEBUG
-    static void check_size(const Node* node) {
-        if (node != nullptr) {
-            if (node->parent != nullptr && node->parent->size <= node->size) {
-                asm("nop");
-            }
-            check_size(node->left);
-            check_size(node->right);
-        }
-    }
-#endif
-
     template <typename OStream>
     void print(OStream& os, const Node* node) const;
 
@@ -129,9 +115,6 @@ Node* BST<Node, Compare>::succ(const Key& key) const {
 
 template <typename Node, typename Compare>
 Node* BST<Node, Compare>::insert(Node* node) {
-#ifdef DEBUG
-    std::cerr << "BST::insert(" << node->key << ")" << std::endl;
-#endif
     Node* parent = nullptr;
     auto probe = _root;
     bool left_path;
@@ -176,10 +159,6 @@ Node* BST<Node, Compare>::insert(Node* node) {
 
 template <typename Node, typename Compare>
 typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node) {
-#ifdef DEBUG
-    std::cerr << "BST::remove(" << node->key << ")" << std::endl;
-    check_size(_root);
-#endif
     auto parent = node->parent;
     bool left_path;
     if (parent != nullptr) {
@@ -204,9 +183,6 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
             _root = nullptr;
         }
         dec_size_path(parent);
-#ifdef DEBUG
-        check_size(_root);
-#endif
         return { nullptr, parent, nullptr, left_path };
     }
 
@@ -226,9 +202,6 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
             _root->parent = nullptr;
         }
         dec_size_path(parent);
-#ifdef DEBUG
-        check_size(_root);
-#endif
         return { node->right, parent, node->right, left_path };
     }
 
@@ -248,9 +221,6 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
             _root->parent = nullptr;
         }
         dec_size_path(parent);
-#ifdef DEBUG
-        check_size(_root);
-#endif
         return { node->left, parent, node->left, left_path };
     }
 
@@ -260,11 +230,7 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
     auto succ = BST::succ(node);
     if (succ == node->right) {
         link_left(succ, node->left);
-#if 0
-        update_size(succ);
-#else
         succ->size = node->size;
-#endif
         subtree_parent = succ;
         subtree_child = succ->right;
         is_left_child = false;
@@ -290,13 +256,7 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
         succ->parent = nullptr;
         _root = succ;
     }
-#ifdef DEBUG
-    check_size(_root);
-#endif
     dec_size_path(subtree_parent);
-#ifdef DEBUG
-    check_size(_root);
-#endif
     succ->balance_factor = node->balance_factor;  // FIXME
     return { succ, subtree_parent, subtree_child, is_left_child };
 }

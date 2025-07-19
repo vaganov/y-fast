@@ -47,45 +47,6 @@ public:
 
 private:
     ApproxReport approx(const Key& key) const;
-
-#ifdef DEBUG
-    void check_double_linked_list() const {
-        int length = 0;
-        for (auto leaf = _leftmost; leaf != nullptr; leaf = leaf->nxt) {
-            ++length;
-        }
-        if (length != _hash[0].size()) {
-            asm("nop");
-        }
-        length = 0;
-        for (auto leaf = _rightmost; leaf != nullptr; leaf = leaf->prv) {
-            ++length;
-        }
-        if (length != _hash[0].size()) {
-            asm("nop");
-        }
-    }
-
-    void check_descendants() const {
-        if (_root.left_present() != _root.right_present()) {
-            auto leaf = _root.descendant();
-            if (!_hash[0].contains(leaf->key)) {
-                asm("nop");
-            }
-        }
-        for (auto h = H - 1; h > 0; --h) {
-            for (const auto& pair: _hash[h]) {
-                Node node = pair.second;
-                if (!node.left_present() || !node.right_present()) {
-                    auto leaf = node.descendant();
-                    if (!_hash[0].contains(leaf->key)) {
-                        asm("nop");
-                    }
-                }
-            }
-        }
-    }
-#endif
 };
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
@@ -132,11 +93,6 @@ void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::insert(Leaf* leaf) {
     Leaf* prv;
     Leaf* nxt;
     auto [guess, missed, level] = approx(leaf->key);
-#ifdef DEBUG
-    if (missed != EMPTY && !_hash[0].contains(guess->key)) {
-        approx(leaf->key);
-    }
-#endif
     switch (missed) {
         case EMPTY:
             _root = Node(leaf, false, false);
@@ -238,10 +194,6 @@ void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::insert(Leaf* leaf) {
     if (_rightmost == nullptr || _cmp(_rightmost->key, leaf->key)) {
         _rightmost = leaf;
     }
-#ifdef DEBUG
-    check_double_linked_list();
-    check_descendants();
-#endif
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
@@ -336,10 +288,6 @@ void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf) {
     if (_rightmost == leaf) {
         _rightmost = prv;
     }
-#ifdef DEBUG
-    check_double_linked_list();
-    check_descendants();
-#endif
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
