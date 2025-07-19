@@ -2,6 +2,7 @@
 #define _YFAST_IMPL_AVL_H
 
 #include <functional>
+#include <iostream>
 
 #include <yfast/impl/bst.h>
 
@@ -15,6 +16,7 @@ public:
     typedef struct {
         AVL left;
         AVL right;
+        Node* left_max;
     } SplitResult;
 
 protected:
@@ -26,11 +28,13 @@ public:
     AVL(const AVL& other) = delete;
     AVL(AVL&& other) noexcept: BST<Node, Compare>(std::move(other)) {}
 
+    [[nodiscard]] unsigned int height() const { return height(_root); }
+
     Node* insert(Node* node);
     Node* remove(Node* node);
 
     SplitResult split();
-    static AVL merge(AVL& left, AVL& right);
+    static AVL merge(AVL&& subtree1, AVL&& subtree2);
 
 protected:
     explicit AVL(Node* root, Compare cmp = Compare()): BST<Node, Compare>(root, cmp) {}
@@ -39,13 +43,14 @@ protected:
     using BST<Node, Compare>::link_right;
     using BST<Node, Compare>::update_size;
     using BST<Node, Compare>::update_size_path;
-#ifdef WITH_HEIGHT
-    using BST<Node, Compare>::update_height;
-#endif
-    using BST<Node, Compare>::leftmost;
-    using BST<Node, Compare>::rightmost;
+    using BST<Node, Compare>::_leftmost;
+    using BST<Node, Compare>::_rightmost;
+
+    static void update_balance_factor(Node* node);
 
 private:
+    static unsigned int height(const Node* node);
+
     static Node* rotate_left(Node* parent, Node* child);
     static Node* rotate_right(Node* parent, Node* child);
     static Node* rotate_right_left(Node* parent, Node* child);
@@ -126,16 +131,21 @@ Node* AVL<Node, Compare>::insert(Node* node) {
 template <typename Node, typename Compare>
 Node* AVL<Node, Compare>::remove(Node* node) {
     auto remove_report = this->template BST<Node, Compare>::remove(node);
+    auto substitution = remove_report.substitution;
     auto new_subroot = remove_report.subtree_child;
     auto parent = remove_report.subtree_parent;
+    bool is_left_child = remove_report.is_left_child;
 
-    // while (parent != nullptr) {
-    for (; parent != nullptr; parent = parent->parent) {
+    if (substitution != new_subroot) {
+        substitution->balance_factor = node->balance_factor;
+    }
+
+    while (parent != nullptr) {
         int sibling_balance_factor;
         auto grand_parent = parent->parent;
-        if (new_subroot == parent->left) {
+        if (is_left_child) {
             auto sibling = parent->right;
-            if (parent->balance_factor > 0 && sibling != nullptr) {
+            if (parent->balance_factor > 0) {
                 sibling_balance_factor = sibling->balance_factor;
                 if (sibling_balance_factor < 0) {
                     new_subroot = rotate_right_left(parent, sibling);
@@ -151,13 +161,16 @@ Node* AVL<Node, Compare>::remove(Node* node) {
                 }
                 new_subroot = parent;
                 new_subroot->balance_factor = 0;
-                // parent = grand_parent;
+                parent = grand_parent;
+                if (parent != nullptr) {
+                    is_left_child = (new_subroot == parent->left);
+                }
                 continue;
             }
         }
         else {
             auto sibling = parent->left;
-            if (parent->balance_factor < 0 && sibling != nullptr) {
+            if (parent->balance_factor < 0) {
                 sibling_balance_factor = sibling->balance_factor;
                 if (sibling_balance_factor > 0) {
                     new_subroot = rotate_left_right(parent, sibling);
@@ -173,16 +186,21 @@ Node* AVL<Node, Compare>::remove(Node* node) {
                 }
                 new_subroot = parent;
                 new_subroot->balance_factor = 0;
-                // parent = grand_parent;
+                parent = grand_parent;
+                if (parent != nullptr) {
+                    is_left_child = (new_subroot == parent->left);
+                }
                 continue;
             }
         }
         if (grand_parent != nullptr) {
             if (parent == grand_parent->left) {
                 link_left(grand_parent, new_subroot);
+                is_left_child = true;
             }
             else {
                 link_right(grand_parent, new_subroot);
+                is_left_child = false;
             }
         }
         else {
@@ -192,7 +210,7 @@ Node* AVL<Node, Compare>::remove(Node* node) {
         if (sibling_balance_factor == 0) {
             break;
         }
-        // parent = grand_parent;
+        parent = grand_parent;
     }
     return node;
 }
@@ -200,10 +218,10 @@ Node* AVL<Node, Compare>::remove(Node* node) {
 template <typename Node, typename Compare>
 typename AVL<Node, Compare>::SplitResult AVL<Node, Compare>::split() {
     if (_root == nullptr) {
-        return {AVL(_cmp), AVL(_cmp)};
+        return { AVL(_cmp), AVL(_cmp), nullptr };
     }
 
-    SplitResult split_result {AVL(_root->left, _cmp), AVL(_root->right, _cmp)};
+    SplitResult split_result { AVL(_root->left, _cmp), AVL(_root->right, _cmp), _root };
     split_result.left.insert(_root);
 
     _root = nullptr;
@@ -212,37 +230,170 @@ typename AVL<Node, Compare>::SplitResult AVL<Node, Compare>::split() {
 }
 
 template <typename Node, typename Compare>
-AVL<Node, Compare> AVL<Node, Compare>::merge(AVL& left, AVL& right) {
-    auto new_subroot = right.leftmost(right._root);
+AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
+    auto first_is_less = subtree1._cmp(subtree1._root->key, subtree2._root->key);
+    auto& left = first_is_less ? subtree1 : subtree2;
+    auto& right = first_is_less ? subtree2 : subtree1;
+    auto new_subroot = AVL::_leftmost(right._root);
     right.remove(new_subroot);
-    if ((left.height() >= right.height() - 1) && (left.height() <= right.height() + 1)) {
-        link_left(new_subroot, left._root);
-        link_right(new_subroot, right._root);
-        update_size(new_subroot);
-        update_height(new_subroot);
-        new_subroot->balance_factor = right.height() - left.height();
-        left._root = nullptr;
-        right._root = nullptr;
-        return AVL(new_subroot, _cmp);
-    }
-    if (left.height() > right.height()) {
-        auto probe = left._root;
-        while (probe->height > right.height()) {
-            probe = probe->right;
+    new_subroot->parent = nullptr;
+    const auto left_height = left.height();
+    const auto right_height = right.height();
+    if (left_height > right_height + 1) {
+        auto probe = _rightmost(left._root);
+        int probe_height = height(probe);
+        while (probe_height < right_height) {
+            probe = probe->parent;
+            if (probe->balance_factor < 0) {
+                probe_height += 2;
+            }
+            else {
+                ++probe_height;
+            }
         }
+
         auto parent = probe->parent;
         link_left(new_subroot, probe);
         link_right(new_subroot, right._root);
         link_right(parent, new_subroot);
         update_size_path(new_subroot);
-        // ...
+        new_subroot->balance_factor = right_height - probe_height;
+
+        while (parent != nullptr) {
+            auto grand_parent = parent->parent;
+            if (parent->balance_factor > 0) {
+                if (new_subroot->balance_factor < 0) {
+                    auto node = rotate_right_left(parent, new_subroot);
+                    if (grand_parent != nullptr) {
+                        link_right(grand_parent, node);
+                    }
+                    else {
+                        node->parent = nullptr;
+                        left._root = node;
+                    }
+                    break;  // subroot is not balanced
+                }
+                else {
+                    auto node = rotate_left(parent, new_subroot);
+                    if (grand_parent != nullptr) {
+                        link_right(grand_parent, node);
+                    }
+                    else {
+                        node->parent = nullptr;
+                        left._root = node;
+                    }
+                    if (node->balance_factor == 0) {
+                        break;
+                    }
+                    // new_subroot = node; // redundant
+                    parent = grand_parent;
+                }
+            }
+            else {
+                ++(parent->balance_factor);
+                if (parent->balance_factor == 0) {
+                    break;
+                }
+                new_subroot = parent;
+                parent = grand_parent;
+            }
+        }
+
         right._root = nullptr;
-        return left;
+        return std::move(left);
     }
-    else {
-        // ...
-        return right;
+    if (right_height > left_height + 1) {
+        auto probe = _leftmost(right._root);
+        int probe_height = height(probe);
+        while (probe_height < left_height) {
+            probe = probe->parent;
+            if (probe->balance_factor > 0) {
+                probe_height += 2;
+            }
+            else {
+                ++probe_height;
+            }
+        }
+
+        auto parent = probe->parent;
+        link_left(new_subroot, left._root);
+        link_right(new_subroot, probe);
+        link_left(parent, new_subroot);
+        update_size_path(new_subroot);
+        new_subroot->balance_factor = probe_height - left_height;
+
+        while (parent != nullptr) {
+            auto grand_parent = parent->parent;
+            if (parent->balance_factor < 0) {
+                if (new_subroot->balance_factor > 0) {
+                    auto node = rotate_left_right(parent, new_subroot);
+                    if (grand_parent != nullptr) {
+                        link_left(grand_parent, node);
+                    }
+                    else {
+                        node->parent = nullptr;
+                        right._root = node;
+                    }
+                    break;  // subroot is not balanced
+                }
+                else {
+                    auto node = rotate_right(parent, new_subroot);
+                    if (grand_parent != nullptr) {
+                        link_left(grand_parent, node);
+                    }
+                    else {
+                        node->parent = nullptr;
+                        right._root = node;
+                    }
+                    if (node->balance_factor == 0) {
+                        break;
+                    }
+                    // new_subroot = node; // redundant
+                    parent = grand_parent;
+                }
+            }
+            else {
+                --(parent->balance_factor);
+                if (parent->balance_factor == 0) {
+                    break;
+                }
+                new_subroot = parent;
+                parent = grand_parent;
+            }
+        }
+
+        left._root = nullptr;
+        return std::move(right);
     }
+
+    link_left(new_subroot, left._root);
+    link_right(new_subroot, right._root);
+    update_size(new_subroot);
+    new_subroot->balance_factor = right_height - left_height;
+    left._root = nullptr;
+    right._root = nullptr;
+    return AVL(new_subroot, left._cmp);
+}
+
+template <typename Node, typename Compare>
+void AVL<Node, Compare>::update_balance_factor(Node* node) {
+    if (node != nullptr) {
+        node->balance_factor = height(node->right) - height(node->left);
+    }
+}
+
+template <typename Node, typename Compare>
+unsigned int AVL<Node, Compare>::height(const Node* node) {
+    if (node == nullptr) {
+        return 0;
+    }
+    if (node->balance_factor > 0) {
+        return 2 + height(node->left);
+    }
+    if (node->balance_factor < 0) {
+        return 2 + height(node->right);
+    }
+    return 1 + height(node->right);
 }
 
 template <typename Node, typename Compare>
@@ -252,10 +403,6 @@ Node* AVL<Node, Compare>::rotate_left(Node* parent, Node* child) {
 
     update_size(parent);
     update_size(child);
-#ifdef WITH_HEIGHT
-    update_height(parent);
-    update_height(child);
-#endif
 
     if (child->balance_factor == 0) {
         parent->balance_factor = 1;
@@ -276,10 +423,6 @@ Node* AVL<Node, Compare>::rotate_right(Node* parent, Node* child) {
 
     update_size(parent);
     update_size(child);
-#ifdef WITH_HEIGHT
-    update_height(parent);
-    update_height(child);
-#endif
 
     if (child->balance_factor == 0) {
         parent->balance_factor = -1;
@@ -305,11 +448,6 @@ Node* AVL<Node, Compare>::rotate_right_left(Node* parent, Node* child) {
     update_size(parent);
     update_size(child);
     update_size(grand_child);
-#ifdef WITH_HEIGHT
-    update_height(parent);
-    update_height(child);
-    update_height(grand_child);
-#endif
 
     if (grand_child->balance_factor == 0) {
         parent->balance_factor = 0;
@@ -340,11 +478,6 @@ Node* AVL<Node, Compare>::rotate_left_right(Node* parent, Node* child) {
     update_size(parent);
     update_size(child);
     update_size(grand_child);
-#ifdef WITH_HEIGHT
-    update_height(parent);
-    update_height(child);
-    update_height(grand_child);
-#endif
 
     if (grand_child->balance_factor == 0) {
         parent->balance_factor = 0;

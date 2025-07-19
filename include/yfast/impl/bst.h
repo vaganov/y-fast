@@ -14,6 +14,7 @@ public:
         Node* substitution;
         Node* subtree_parent;  // height changed
         Node* subtree_child;  // height unchanged
+        bool is_left_child;  // NB: only matters if subtree_parent != nullptr
     } RemoveReport;
 
 protected:
@@ -32,12 +33,9 @@ public:
     ~BST() { destroy(_root); }
 
     [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
-#ifdef WITH_HEIGHT
-    [[nodiscard]] unsigned int height() const { return _root != nullptr ? _root->height : 0; }
-#endif
-    const Key& sample() const;
-    const Key& min() const;
-    const Key& max() const;
+    const Node* root() const { return _root; }
+    const Node* leftmost() const { return _root != nullptr ? _leftmost(_root) : nullptr; }
+    const Node* rightmost() const { return _root != nullptr ? _rightmost(_root) : nullptr; }
 
     Node* find(const Key& key) const;
     Node* pred(const Key& key) const;
@@ -53,10 +51,10 @@ protected:
         }
     }
 
-    static Node* rightmost(Node* node);
-    static Node* leftmost(Node* node);
-    static Node* pred(const Node* node);
-    static Node* succ(const Node* node);
+    static Node* _leftmost(Node* node);
+    static Node* _rightmost(Node* node);
+    static Node* pred(const Node* node);  // TODO: rename _pred
+    static Node* succ(const Node* node);  // TODO: rename _succ
 
     static void link_left(Node* parent, Node* child);
     static void link_right(Node* parent, Node* child);
@@ -66,51 +64,19 @@ protected:
     static void inc_size_path(Node* node);
     static void dec_size_path(Node* node);
 
-#ifdef WITH_HEIGHT
-    static void update_height(Node* node);
-    static void update_height_path(Node* node);
-#endif
-
 private:
     static void destroy(Node* node);
 };
-
-template <typename Node, typename Compare>
-const typename BST<Node, Compare>::Key& BST<Node, Compare>::sample() const {
-    if (_root != nullptr) {
-        return _root->key;
-    }
-    static const auto default_key = Key();
-    return default_key;
-}
-
-template <typename Node, typename Compare>
-const typename BST<Node, Compare>::Key& BST<Node, Compare>::min() const {
-    if (_root != nullptr) {
-        return leftmost(_root)->key;
-    }
-    static const auto default_key = Key();
-    return default_key;
-}
-
-template <typename Node, typename Compare>
-const typename BST<Node, Compare>::Key& BST<Node, Compare>::max() const {
-    if (_root != nullptr) {
-        return rightmost(_root)->key;
-    }
-    static const auto default_key = Key();
-    return default_key;
-}
 
 template <typename Node, typename Compare>
 Node* BST<Node, Compare>::find(const Key& key) const {
     auto probe = _root;
     while (probe != nullptr) {
         if (_cmp(probe->key, key)) {
-            probe = probe->left;
+            probe = probe->right;
         }
         else if (_cmp(key, probe->key)) {
-            probe = probe->right;
+            probe = probe->left;
         }
         else {
             return probe;
@@ -167,9 +133,6 @@ Node* BST<Node, Compare>::insert(Node* node) {
     node->left = nullptr;
     node->right = nullptr;
     node->size = 1;
-#ifdef WITH_HEIGHT
-    node->height = 1;
-#endif
 
     if (parent != nullptr) {
         if (left_path) {  // NB: assigned if 'parent' non-null
@@ -184,9 +147,6 @@ Node* BST<Node, Compare>::insert(Node* node) {
     }
 
     inc_size_path(parent);
-#ifdef WITH_HEIGHT
-    update_height_path(parent);
-#endif
 
     return node;
 }
@@ -217,66 +177,62 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
             _root = nullptr;
         }
         dec_size_path(parent);
-#ifdef WITH_HEIGHT
-        update_height_path(parent);
-#endif
-        return {nullptr, parent, nullptr};
+        return { nullptr, parent, nullptr, left_path };
     }
 
     if (node->left == nullptr) {  // => node->right != nullptr
         if (parent != nullptr) {
             if (left_path) {  // NB: assigned if 'parent' non-null
-                parent->left = node->right;
+                link_left(parent, node->right);
             }
             else {
-                parent->right = node->right;
+                link_right(parent, node->right);
             }
         }
         else {
             _root = node->right;
+            _root->parent = nullptr;
         }
         dec_size_path(parent);
-#ifdef WITH_HEIGHT
-        update_height_path(parent);
-#endif
-        return {node->right, parent, node->right};
+        return { node->right, parent, node->right, left_path };
     }
 
     if (node->right == nullptr) {  // => node->left != nullptr
         if (parent != nullptr) {
             if (left_path) {  // NB: assigned if 'parent' non-null
-                parent->left = node->left;
+                link_left(parent, node->left);
             }
             else {
-                parent->right = node->left;
+                link_right(parent, node->left);
             }
         }
         else {
             _root = node->left;
+            _root->parent = nullptr;
         }
         dec_size_path(parent);
-#ifdef WITH_HEIGHT
-        update_height_path(parent);
-#endif
-        return {node->left, parent, node->left};
+        return { node->left, parent, node->left, left_path };
     }
 
     Node* subtree_parent;
     Node* subtree_child;
+    bool is_left_child;
     auto succ = BST::succ(node);
     if (succ == node->right) {
         link_left(succ, node->left);
-        update_size(succ);
+        succ->size = node->size;
         subtree_parent = succ;
         subtree_child = succ->right;
+        is_left_child = false;
     }
     else {
+        subtree_parent = succ->parent;
+        subtree_child = succ->right;
         link_left(succ->parent, succ->right);
         link_left(succ, node->left);
         link_right(succ, node->right);
         succ->size = node->size;
-        subtree_parent = succ->parent;
-        subtree_child = succ->right;
+        is_left_child = true;
     }
     if (parent != nullptr) {
         if (left_path) {  // NB: assigned if 'parent' non-null
@@ -291,14 +247,11 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
         _root = succ;
     }
     dec_size_path(subtree_parent);
-#ifdef WITH_HEIGHT
-    update_height_path(subtree_parent);
-#endif
-    return {succ, subtree_parent, subtree_child};
+    return { succ, subtree_parent, subtree_child, is_left_child };
 }
 
 template <typename Node, typename Compare>
-Node* BST<Node, Compare>::rightmost(Node* node) {
+Node* BST<Node, Compare>::_rightmost(Node* node) {
     auto probe = node;
     while (probe->right != nullptr) {
         probe = probe->right;
@@ -307,7 +260,7 @@ Node* BST<Node, Compare>::rightmost(Node* node) {
 }
 
 template <typename Node, typename Compare>
-Node* BST<Node, Compare>::leftmost(Node* node) {
+Node* BST<Node, Compare>::_leftmost(Node* node) {
     auto probe = node;
     while (probe->left != nullptr) {
         probe = probe->left;
@@ -318,22 +271,7 @@ Node* BST<Node, Compare>::leftmost(Node* node) {
 template <typename Node, typename Compare>
 Node* BST<Node, Compare>::pred(const Node* node) {
     if (node->left != nullptr) {
-        return rightmost(node->left);
-    }
-    auto probe = node->parent;
-    if (probe == nullptr) {
-        return nullptr;
-    }
-    while (probe->parent != nullptr && probe == probe->parent->right) {
-        probe = probe->parent;
-    }
-    return probe;
-}
-
-template <typename Node, typename Compare>
-Node* BST<Node, Compare>::succ(const Node* node) {
-    if (node->right != nullptr) {
-        return leftmost(node->right);
+        return _rightmost(node->left);
     }
     auto probe = node->parent;
     if (probe == nullptr) {
@@ -342,7 +280,22 @@ Node* BST<Node, Compare>::succ(const Node* node) {
     while (probe->parent != nullptr && probe == probe->parent->left) {
         probe = probe->parent;
     }
-    return probe;
+    return probe->parent;
+}
+
+template <typename Node, typename Compare>
+Node* BST<Node, Compare>::succ(const Node* node) {
+    if (node->right != nullptr) {
+        return _leftmost(node->right);
+    }
+    auto probe = node->parent;
+    if (probe == nullptr) {
+        return nullptr;
+    }
+    while (probe->parent != nullptr && probe == probe->parent->right) {
+        probe = probe->parent;
+    }
+    return probe->parent;
 }
 
 template <typename Node, typename Compare>
@@ -394,24 +347,6 @@ void BST<Node, Compare>::dec_size_path(Node* node) {
         --(ancestor->size);
     }
 }
-
-#ifdef WITH_HEIGHT
-template <typename Node, typename Compare>
-void BST<Node, Compare>::update_height(Node* node) {
-    if (node != nullptr) {
-        auto left_height = node->left != nullptr ? node->left->height : 0;
-        auto right_height = node->right != nullptr ? node->right->height : 0;
-        node->height = 1 + std::max(left_height, right_height);
-    }
-}
-
-template <typename Node, typename Compare>
-void BST<Node, Compare>::update_height_path(Node* node) {
-    for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
-        update_height(ancestor);
-    }
-}
-#endif
 
 template <typename Node, typename Compare>
 void BST<Node, Compare>::destroy(Node* node) {

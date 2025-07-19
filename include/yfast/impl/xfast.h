@@ -28,10 +28,15 @@ private:
     BitExtractor _bx;
     Compare _cmp;
     Node _root;
+    Leaf* _leftmost;
+    Leaf* _rightmost;
     Hash _hash[H];
 
 public:
-    explicit XFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _bx(bx), _cmp(cmp), _root(nullptr, false, false) {}
+    explicit XFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _bx(bx), _cmp(cmp), _root(nullptr, false, false), _leftmost(nullptr), _rightmost(nullptr) {}
+
+    Leaf* leftmost() const { return _leftmost; }
+    Leaf* rightmost() const { return _rightmost; }
 
     Leaf* find(const Key& key) const;
     Leaf* pred(const Key& key) const;
@@ -182,6 +187,13 @@ void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::insert(Leaf* leaf) {
     }
 
     _hash[0][_bx.shift(leaf->key, 0)] = reinterpret_cast<std::uintptr_t>(leaf);
+
+    if (_leftmost == nullptr || _cmp(leaf->key, _leftmost->key)) {
+        _leftmost = leaf;
+    }
+    if (_rightmost == nullptr || _cmp(_rightmost->key, leaf->key)) {
+        _rightmost = leaf;
+    }
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
@@ -258,6 +270,23 @@ void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf) {
                 _root.set_descendant(nullptr);
             }
         }
+    }
+    else {
+        if (_root.descendant() == leaf) {
+            if (!_root.left_present()) {
+                _root.set_descendant(nxt);
+            }
+            if (!_root.right_present()) {
+                _root.set_descendant(prv);
+            }
+        }
+    }
+
+    if (_leftmost == leaf) {
+        _leftmost = nxt;
+    }
+    if (_rightmost == leaf) {
+        _rightmost = prv;
     }
 }
 

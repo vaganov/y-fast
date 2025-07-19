@@ -9,7 +9,7 @@ template <typename _Key, typename T>
 struct XFastLeafBase {
     typedef _Key Key;
 
-    Key key;
+    const Key key;
     T* prv;
     T* nxt;
 };
