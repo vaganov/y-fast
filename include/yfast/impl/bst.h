@@ -257,7 +257,6 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
         _root = succ;
     }
     dec_size_path(subtree_parent);
-    succ->balance_factor = node->balance_factor;  // FIXME
     return { succ, subtree_parent, subtree_child, is_left_child };
 }
 

@@ -136,16 +136,13 @@ Node* AVL<Node, Compare>::remove(Node* node) {
     auto parent = remove_report.subtree_parent;
     bool is_left_child = remove_report.is_left_child;
 
-    // if (substitution != nullptr) {
-    //     substitution->balance_factor = node->balance_factor;
-    // }
+    if (substitution != new_subroot) {
+        substitution->balance_factor = node->balance_factor;
+    }
 
     while (parent != nullptr) {
         int sibling_balance_factor;
         auto grand_parent = parent->parent;
-        if (new_subroot != nullptr) {  // FIXME
-            is_left_child = (new_subroot == parent->left);
-        }
         if (is_left_child) {
             auto sibling = parent->right;
             if (parent->balance_factor > 0) {
@@ -165,6 +162,9 @@ Node* AVL<Node, Compare>::remove(Node* node) {
                 new_subroot = parent;
                 new_subroot->balance_factor = 0;
                 parent = grand_parent;
+                if (parent != nullptr) {
+                    is_left_child = (new_subroot == parent->left);
+                }
                 continue;
             }
         }
@@ -187,15 +187,20 @@ Node* AVL<Node, Compare>::remove(Node* node) {
                 new_subroot = parent;
                 new_subroot->balance_factor = 0;
                 parent = grand_parent;
+                if (parent != nullptr) {
+                    is_left_child = (new_subroot == parent->left);
+                }
                 continue;
             }
         }
         if (grand_parent != nullptr) {
             if (parent == grand_parent->left) {
                 link_left(grand_parent, new_subroot);
+                is_left_child = true;
             }
             else {
                 link_right(grand_parent, new_subroot);
+                is_left_child = false;
             }
         }
         else {
@@ -275,11 +280,7 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
                         node->parent = nullptr;
                         left._root = node;
                     }
-                    if (node->balance_factor == 0) {  // FIXME: always true?
-                        break;
-                    }
-                    new_subroot = node;
-                    parent = grand_parent;
+                    break;  // subroot is not balanced
                 }
                 else {
                     auto node = rotate_left(parent, new_subroot);
@@ -293,7 +294,7 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
                     if (node->balance_factor == 0) {
                         break;
                     }
-                    new_subroot = node;  // FIXME: redundant
+                    // new_subroot = node; // redundant
                     parent = grand_parent;
                 }
             }
@@ -342,11 +343,7 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
                         node->parent = nullptr;
                         right._root = node;
                     }
-                    if (node->balance_factor == 0) {
-                        break;
-                    }
-                    new_subroot = node;
-                    parent = grand_parent;
+                    break;  // subroot is not balanced
                 }
                 else {
                     auto node = rotate_right(parent, new_subroot);
@@ -360,7 +357,7 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
                     if (node->balance_factor == 0) {
                         break;
                     }
-                    new_subroot = node;  // FIXME: redundant
+                    // new_subroot = node; // redundant
                     parent = grand_parent;
                 }
             }
