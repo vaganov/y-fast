@@ -64,14 +64,8 @@ protected:
     static void inc_size_path(Node* node);
     static void dec_size_path(Node* node);
 
-// private:
+private:
     static void destroy(Node* node);
-
-    template <typename OStream>
-    void print(OStream& os, const Node* node) const;
-
-    template <typename _Node, typename _Compare, typename OStream>
-    friend OStream& operator << (OStream& os, const BST<_Node, _Compare>& tree);
 };
 
 template <typename Node, typename Compare>
@@ -189,11 +183,9 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
     if (node->left == nullptr) {  // => node->right != nullptr
         if (parent != nullptr) {
             if (left_path) {  // NB: assigned if 'parent' non-null
-                // parent->left = node->right;
                 link_left(parent, node->right);
             }
             else {
-                // parent->right = node->right;
                 link_right(parent, node->right);
             }
         }
@@ -208,11 +200,9 @@ typename BST<Node, Compare>::RemoveReport BST<Node, Compare>::remove(Node* node)
     if (node->right == nullptr) {  // => node->left != nullptr
         if (parent != nullptr) {
             if (left_path) {  // NB: assigned if 'parent' non-null
-                // parent->left = node->left;
                 link_left(parent, node->left);
             }
             else {
-                // parent->right = node->left;
                 link_right(parent, node->left);
             }
         }
@@ -287,7 +277,6 @@ Node* BST<Node, Compare>::pred(const Node* node) {
     if (probe == nullptr) {
         return nullptr;
     }
-    // while (probe->parent != nullptr && probe == probe->parent->right) {
     while (probe->parent != nullptr && probe == probe->parent->left) {
         probe = probe->parent;
     }
@@ -303,7 +292,6 @@ Node* BST<Node, Compare>::succ(const Node* node) {
     if (probe == nullptr) {
         return nullptr;
     }
-    // while (probe->parent != nullptr && (probe == probe->parent->left)) {
     while (probe->parent != nullptr && probe == probe->parent->right) {
         probe = probe->parent;
     }
@@ -367,29 +355,6 @@ void BST<Node, Compare>::destroy(Node* node) {
         destroy(node->right);
         delete node;
     }
-}
-
-template <typename Node, typename Compare>
-template <typename OStream>
-void BST<Node, Compare>::print(OStream& os, const Node* node) const {
-    if (node != nullptr) {
-        // os << *node;  // NB: requires 'operator <<' for 'Node'
-        os << node->key;
-        os << " (";
-        print(os, node->left);
-        os << ", ";
-        print(os, node->right);
-        os << ")";
-    }
-    else {
-        os << "NULL";
-    }
-}
-
-template<typename _Node, typename _Eq, typename _Compare, typename OStream>
-OStream& operator << (OStream& os, const BST<_Node, _Compare>& tree) {
-    tree.print(os, tree._root);
-    return os << " [size=" << tree.size() << "]";
 }
 
 }
