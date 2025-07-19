@@ -7,14 +7,11 @@ template <typename _Key, typename T>
 struct BSTNodeBase {
     typedef _Key Key;
 
-    Key key;
+    const Key key;
     T* parent;
     T* left;
     T* right;
     unsigned int size;
-#ifdef WITH_HEIGHT
-    int height;
-#endif
 };
 
 }
