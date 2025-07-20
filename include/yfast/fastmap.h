@@ -113,6 +113,16 @@ public:
 
     iterator find(const Key& key) const;
 
+    typename YFastLeaf::DerefType& operator [] (const Key& key) {
+        auto i = find(key);
+        if (i == end()) {
+            auto leaf = new YFastLeaf(key);
+            auto where = _trie.insert(leaf);
+            i = iterator(where);
+        }
+        return *i;
+    }
+
     template <typename ... Args>
     iterator insert(const Key& key, Args ... args);
     void erase(iterator& i);

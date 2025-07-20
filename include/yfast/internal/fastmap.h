@@ -17,6 +17,7 @@ struct YFastLeaf<Key, Value, std::enable_if_t<!std::is_void_v<Value>>>: public A
 
     Value value;
 
+    explicit YFastLeaf(const Key& key): AVLNodeBase<Key, YFastLeaf>(key), value() {}
     explicit YFastLeaf(const Key& key, const Value& value): AVLNodeBase<Key, YFastLeaf>(key), value(value) {}
     explicit YFastLeaf(const Key& key, Value&& value): AVLNodeBase<Key, YFastLeaf<Key, Value>>(key), value(std::move(value)) {}
 

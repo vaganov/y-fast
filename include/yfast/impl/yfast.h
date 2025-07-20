@@ -78,7 +78,7 @@ typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, 
             return { this, pred, leaf };
         }
     }
-    auto succ = (pred != nullptr) ? pred->nxt : _trie.succ(key);
+    auto succ = (pred != nullptr) ? pred->nxt : _trie.leftmost();
     if (succ != nullptr) {
         auto leaf = succ->value.find(key);
         if (leaf != nullptr) {
@@ -161,8 +161,17 @@ void YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf, XFastLe
         if (neighbor != nullptr) {
             _trie.remove(xleaf);
             _trie.remove(neighbor);
-            auto merged = Value::merge(std::move(xleaf->value), std::move(neighbor->value));  // TODO: split if necessary
-            _trie.insert(new XFastLeaf(merged.root()->key, std::move(merged)));
+            auto merged = Value::merge(std::move(xleaf->value), std::move(neighbor->value));
+            if (merged.size() > TREE_SPLIT_THRESHOLD) {
+                auto split_result = merged.split();
+                auto left = new XFastLeaf(split_result.left.root()->key, std::move(split_result.left));
+                auto right = new XFastLeaf(split_result.right.root()->key, std::move(split_result.right));
+                _trie.insert(left);
+                _trie.insert(right);
+            }
+            else {
+                _trie.insert(new XFastLeaf(merged.root()->key, std::move(merged)));
+            }
             delete xleaf;
             delete neighbor;
             ++_rebuilds;

@@ -54,6 +54,25 @@ protected:
         }
     }
 
+    Node* seek(const Key& key) const {
+        auto probe = _root;
+        Node* parent = nullptr;
+        while (probe != nullptr) {
+            if (_cmp(probe->key, key)) {
+                parent = probe;
+                probe = parent->right;
+            }
+            else if (_cmp(key, probe->key)) {
+                parent = probe;
+                probe = parent->left;
+            }
+            else {
+                return probe;
+            }
+        }
+        return parent;
+    }
+
     static Node* _leftmost(Node* node);
     static Node* _rightmost(Node* node);
 
@@ -88,24 +107,26 @@ Node* BST<Node, Compare>::find(const Key& key) const {
 
 template <typename Node, typename Compare>
 Node* BST<Node, Compare>::pred(const Key& key) const {
-    auto probe = _root;
-    Node* parent = nullptr;
-    while (probe != nullptr) {
-        parent = probe;
-        probe = _cmp(key, parent->key) ? parent->right : parent->left;
+    auto node = seek(key);
+    if (node == nullptr) {
+        return nullptr;
     }
-    return parent;
+    if (_cmp(key, node->key)) {
+        return pred(node);
+    }
+    return node;
 }
 
 template <typename Node, typename Compare>
 Node* BST<Node, Compare>::succ(const Key& key) const {
-    auto probe = _root;
-    Node* parent = nullptr;
-    while (probe != nullptr) {
-        parent = probe;
-        probe = _cmp(parent->key, key) ? parent->left : parent->right;
+    auto node = seek(key);
+    if (node == nullptr) {
+        return nullptr;
     }
-    return parent;
+    if (_cmp(node->key, key)) {
+        return succ(node);
+    }
+    return node;
 }
 
 template <typename Node, typename Compare>
