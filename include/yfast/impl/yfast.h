@@ -19,22 +19,27 @@ private:
     static constexpr auto TREE_MERGE_THRESHOLD = H / 4;
 
 public:
-    typedef struct {
+    struct Where {
         const YFastTrie* const trie;
         XFastLeaf* xleaf;
         Leaf* leaf;
-    } Where;
+
+        Where(): Where(nullptr) {}
+        explicit Where(const YFastTrie* trie): Where(trie, nullptr, nullptr) {}
+        Where(const YFastTrie* trie, XFastLeaf* xleaf, Leaf* leaf): trie(trie), xleaf(xleaf), leaf(leaf) {}
+    };
 
 private:
     Compare _cmp;
     XFastTrie<XFastLeaf, H, BitExtractor, Compare, Hash> _trie;
-    // TODO: unsigned int _trie_rebuilds = 0;
+    unsigned int _rebuilds;
     std::size_t _size;
 
 public:
-    explicit YFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _cmp(cmp), _trie(bx, cmp), _size(0) {}
+    explicit YFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _cmp(cmp), _trie(bx, cmp), _rebuilds(0), _size(0) {}
 
     [[nodiscard]] std::size_t size() const { return _size; }
+    [[nodiscard]] unsigned int rebuilds() const { return _rebuilds; }
 
     Where leftmost() const;
     Where rightmost() const;
@@ -132,6 +137,7 @@ typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, 
         _trie.insert(right);
         delete xleaf;
         xleaf = _cmp(split_result.left_max->key, leaf->key) ? right : left;
+        ++_rebuilds;
     }
 
     ++_size;
@@ -159,10 +165,12 @@ void YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf, XFastLe
             _trie.insert(new XFastLeaf(merged.root()->key, std::move(merged)));
             delete xleaf;
             delete neighbor;
+            ++_rebuilds;
         }
         else if (xleaf->value.size() == 0) {
             _trie.remove(xleaf);
             delete xleaf;
+            ++_rebuilds;
         }
     }
     else {

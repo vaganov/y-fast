@@ -33,9 +33,9 @@ public:
     ~BST() { destroy(_root); }
 
     [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
-    const Node* root() const { return _root; }
-    const Node* leftmost() const { return _root != nullptr ? _leftmost(_root) : nullptr; }
-    const Node* rightmost() const { return _root != nullptr ? _rightmost(_root) : nullptr; }
+    Node* root() const { return _root; }
+    Node* leftmost() const { return _root != nullptr ? _leftmost(_root) : nullptr; }
+    Node* rightmost() const { return _root != nullptr ? _rightmost(_root) : nullptr; }
 
     Node* find(const Key& key) const;
     Node* pred(const Key& key) const;
@@ -43,6 +43,9 @@ public:
 
     Node* insert(Node* node);
     RemoveReport remove(Node* node);
+
+    static Node* pred(Node* node);
+    static Node* succ(Node* node);
 
 protected:
     explicit BST(Node* root, Compare cmp = Compare()): _cmp(cmp), _root(root) {
@@ -53,8 +56,6 @@ protected:
 
     static Node* _leftmost(Node* node);
     static Node* _rightmost(Node* node);
-    static Node* pred(const Node* node);  // TODO: rename _pred
-    static Node* succ(const Node* node);  // TODO: rename _succ
 
     static void link_left(Node* parent, Node* child);
     static void link_right(Node* parent, Node* child);
@@ -269,33 +270,29 @@ Node* BST<Node, Compare>::_leftmost(Node* node) {
 }
 
 template <typename Node, typename Compare>
-Node* BST<Node, Compare>::pred(const Node* node) {
+Node* BST<Node, Compare>::pred(Node* node) {
     if (node->left != nullptr) {
         return _rightmost(node->left);
     }
-    auto probe = node->parent;
-    if (probe == nullptr) {
-        return nullptr;
+    for (auto probe = node; probe->parent != nullptr; probe = probe->parent) {
+        if (probe == probe->parent->right) {
+            return probe->parent;
+        }
     }
-    while (probe->parent != nullptr && probe == probe->parent->left) {
-        probe = probe->parent;
-    }
-    return probe->parent;
+    return nullptr;
 }
 
 template <typename Node, typename Compare>
-Node* BST<Node, Compare>::succ(const Node* node) {
+Node* BST<Node, Compare>::succ(Node* node) {
     if (node->right != nullptr) {
         return _leftmost(node->right);
     }
-    auto probe = node->parent;
-    if (probe == nullptr) {
-        return nullptr;
+    for (auto probe = node; probe->parent != nullptr; probe = probe->parent) {
+        if (probe == probe->parent->left) {
+            return probe->parent;
+        }
     }
-    while (probe->parent != nullptr && probe == probe->parent->right) {
-        probe = probe->parent;
-    }
-    return probe->parent;
+    return nullptr;
 }
 
 template <typename Node, typename Compare>
