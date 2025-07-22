@@ -46,8 +46,6 @@ protected:
     using BST<Node, Compare>::_leftmost;
     using BST<Node, Compare>::_rightmost;
 
-    static void update_balance_factor(Node* node);
-
 private:
     static unsigned int height(const Node* node);
 
@@ -373,13 +371,6 @@ AVL<Node, Compare> AVL<Node, Compare>::merge(AVL&& subtree1, AVL&& subtree2) {
     left._root = nullptr;
     right._root = nullptr;
     return AVL(new_subroot, left._cmp);
-}
-
-template <typename Node, typename Compare>
-void AVL<Node, Compare>::update_balance_factor(Node* node) {
-    if (node != nullptr) {
-        node->balance_factor = height(node->right) - height(node->left);
-    }
 }
 
 template <typename Node, typename Compare>

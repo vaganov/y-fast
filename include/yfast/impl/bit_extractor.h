@@ -59,14 +59,14 @@ inline std::vector<std::byte> BitExtractor<std::vector<std::byte>>::shift(const 
     std::vector<std::byte> shifted(shifted_size);
     const auto r = n % 8;
     if (r == 0) {
-        std::ranges::copy(data + s, data + size, shifted.begin());
+        std::ranges::copy(data, data + shifted_size, shifted.begin());
         return shifted;
     }
 
     const auto l = 8 - r;
-    std::transform(data + s, data + size, shifted.begin(), [r] (std::byte b) { return b >> r; });
+    std::transform(data, data + shifted_size, shifted.begin(), [r] (std::byte b) { return b >> r; });
     for (int i = 1; i < shifted_size; ++i) {
-        shifted[i] |= data[i + s - 1] << l;
+        shifted[i] |= data[i - 1] << l;
     }
     return shifted;
 }

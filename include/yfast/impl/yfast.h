@@ -50,6 +50,7 @@ public:
 
     Where insert(Leaf* leaf);
     void remove(Leaf* leaf, XFastLeaf* hint = nullptr);
+    void clear();
 
 private:
     static XFastLeaf* pick_neighbor(XFastLeaf* xleaf);
@@ -91,21 +92,61 @@ typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
 typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::pred(const Key& key) const {
     auto pred = _trie.pred(key);
-    auto leaf = pred->value.pred(key);
-    return { this, pred, leaf };  // FIXME
+    if (pred != nullptr) {
+        auto pred_max = pred->value.rightmost();
+        if (_cmp(pred_max->key, key)) {
+            auto succ = pred->nxt;
+            if (succ != nullptr && !_cmp(key, succ->value.leftmost()->key)) {
+                auto leaf = succ->value.pred(key);
+                return { this, succ, leaf };
+            }
+            else {
+                return { this, pred, pred_max };
+            }
+        }
+        else {
+            auto leaf = pred->value.pred(key);
+            return { this, pred, leaf };
+        }
+    }
+    else {
+        auto succ = _trie.leftmost();
+        auto leaf = succ != nullptr ? succ->value.pred(key) : nullptr;
+        return { this, succ, leaf };
+    }
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
 typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::succ(const Key& key) const {
     auto succ = _trie.succ(key);
-    auto leaf = succ->value.pred(key);
-    return { this, succ, leaf };  // FIXME
+    if (succ != nullptr) {
+        auto succ_min = succ->value.leftmost();
+        if (_cmp(key, succ_min->key)) {
+            auto pred = succ->prv;
+            if (pred != nullptr && !_cmp(pred->value.rightmost()->key, key)) {
+                auto leaf = pred->value.succ(key);
+                return { this, pred, leaf };
+            }
+            else {
+                return { this, succ, succ_min };
+            }
+        }
+        else {
+            auto leaf = succ->value.succ(key);
+            return { this, succ, leaf };
+        }
+    }
+    else {
+        auto pred = _trie.rightmost();
+        auto leaf = pred != nullptr ? pred->value.succ(key) : nullptr;
+        return { this, pred, leaf };
+    }
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
 typename YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::Where YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::insert(Leaf* leaf) {
     auto pred = _trie.pred(leaf->key);
-    auto succ = (pred != nullptr) ? pred->nxt : _trie.succ(leaf->key);
+    auto succ = (pred != nullptr) ? pred->nxt : _trie.leftmost();
     XFastLeaf* xleaf;
 
     if (pred != nullptr && succ != nullptr) {
@@ -191,6 +232,16 @@ void YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf, XFastLe
     }
 
     --_size;
+}
+
+template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
+void YFastTrie<Leaf, H, BitExtractor, Compare, Hash>::clear() {
+    for (auto xleaf = _trie.leftmost(); xleaf != nullptr; xleaf = xleaf->nxt) {
+        delete xleaf;
+    }
+    _trie.clear();
+    _size = 0;
+    _rebuilds = 0;
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>

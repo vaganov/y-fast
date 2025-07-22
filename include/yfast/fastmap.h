@@ -10,8 +10,6 @@
 #include <yfast/internal/fastmap.h>
 #include <yfast/impl/bit_extractor.h>
 
-#define DEBUG
-
 namespace yfast {
 
 template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor = impl::BitExtractor<Key>, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = std::unordered_map<typename BitExtractor::ShiftResult, std::uintptr_t>, typename Compare = std::less<Key>>
@@ -47,6 +45,10 @@ public:
 
         bool operator != (const iterator& other) const {
             return leaf != other.leaf;
+        }
+
+        bool operator == (const iterator& other) const {
+            return leaf == other.leaf;
         }
 
         typename YFastLeaf::DerefType& operator * () {
@@ -126,6 +128,10 @@ public:
     template <typename ... Args>
     iterator insert(const Key& key, Args ... args);
     void erase(iterator& i);
+
+    void clear() {
+        _trie.clear();
+    }
 };
 
 template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash, typename Compare>
@@ -137,7 +143,6 @@ typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<K
 template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash, typename Compare>
 template <typename ... Args>
 typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<Key, Value, H, BitExtractor, Hash, Compare>::insert(const Key& key, Args ... args) {
-    // _trie.insert(new YFastLeaf(key, std::forward<Args>(args) ...));
     auto leaf = new YFastLeaf(key, args ...);
     auto where = _trie.insert(leaf);
     if (where.leaf != leaf) {

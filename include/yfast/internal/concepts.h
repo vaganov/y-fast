@@ -7,10 +7,11 @@ namespace yfast::internal {
 
 template <typename Map, typename Key, typename Value>
 concept MapGeneric = requires (Map map, Key key) {
-    { map[key] } -> std::convertible_to<Value>;  // TODO: Value&
-    { map.at(key) } -> std::convertible_to<Value>;  // TODO: Value&
+    { map[key] } -> std::same_as<Value&>;
+    { map.at(key) } -> std::convertible_to<Value>;
     { map.contains(key) } -> std::convertible_to<bool>;
     { map.erase(key) };
+    { map.clear() };
 };
 
 template <typename BitExtractor, typename Key>

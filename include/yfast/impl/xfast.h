@@ -44,6 +44,7 @@ public:
 
     void insert(Leaf* leaf);
     void remove(Leaf* leaf);
+    void clear();
 
 private:
     ApproxReport approx(const Key& key) const;
@@ -291,8 +292,18 @@ void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::remove(Leaf* leaf) {
 }
 
 template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
+void XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::clear() {
+    for (unsigned int h = 0; h < H; ++h) {
+        _hash[h].clear();
+    }
+    _root = Node(nullptr, false, false);
+    _leftmost = nullptr;
+    _rightmost = nullptr;
+}
+
+template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
 typename XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::ApproxReport XFastTrie<Leaf, H, BitExtractor, Compare, Hash>::approx(const Key& key) const {
-    if (_root.descendant() == nullptr) {
+    if (!_root.left_present() && !_root.right_present()) {
         return {nullptr, EMPTY, H };
     }
 
