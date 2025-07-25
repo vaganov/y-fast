@@ -2,7 +2,6 @@
 #define _YFAST_IMPL_AVL_H
 
 #include <functional>
-#include <iostream>
 
 #include <yfast/impl/bst.h>
 

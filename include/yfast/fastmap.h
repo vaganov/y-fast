@@ -3,16 +3,16 @@
 
 #include <functional>
 #include <stdexcept>
-#include <unordered_map>
 
 #include <yfast/impl/yfast.h>
 #include <yfast/internal/concepts.h>
+#include <yfast/internal/default_hash.h>
 #include <yfast/internal/fastmap.h>
 #include <yfast/impl/bit_extractor.h>
 
 namespace yfast {
 
-template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor = impl::BitExtractor<Key>, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = std::unordered_map<typename BitExtractor::ShiftResult, std::uintptr_t>, typename Compare = std::less<Key>>
+template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor = impl::BitExtractor<Key>, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>, typename Compare = std::less<Key>>
 class fastmap {
     static_assert(H >= 8, "Key length too short");
 
@@ -36,29 +36,28 @@ public:
         using YFastTrie::Where::trie;
         unsigned int _last_rebuild = 0;
 
-        explicit iterator(const YFastTrie* trie): YFastTrie::Where(trie), _last_rebuild(trie->rebuilds()) {}
         explicit iterator(const typename YFastTrie::Where& where): YFastTrie::Where(where), _last_rebuild(trie->rebuilds()) {}
 
     public:
         iterator() = default;
         iterator(const iterator& other) = default;
 
-        bool operator != (const iterator& other) const {
-            return leaf != other.leaf;
-        }
-
         bool operator == (const iterator& other) const {
             return leaf == other.leaf;
         }
 
-        typename YFastLeaf::DerefType& operator * () {
+        bool operator != (const iterator& other) const {
+            return leaf != other.leaf;
+        }
+
+        typename YFastLeaf::DerefType& operator * () const {
             if (leaf != nullptr) {
                 return leaf->deref();
             }
             throw std::out_of_range("fastmap::iterator");
         }
 
-        typename YFastLeaf::DerefType* operator -> () {
+        typename YFastLeaf::DerefType* operator -> () const {
             if (leaf != nullptr) {
                 return &leaf->deref();
             }
@@ -98,7 +97,7 @@ public:
 private:
     YFastTrie _trie;
 
-    const iterator _null_iterator = iterator(&_trie);
+    static constexpr iterator _null_iterator = iterator();
 
 public:
     explicit fastmap(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _trie(bx, cmp) {}
@@ -127,7 +126,7 @@ public:
 
     template <typename ... Args>
     iterator insert(const Key& key, Args ... args);
-    void erase(iterator& i);
+    iterator erase(const iterator& i);
 
     void clear() {
         _trie.clear();
@@ -153,9 +152,12 @@ typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<K
 }
 
 template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash, typename Compare>
-void fastmap<Key, Value, H, BitExtractor, Hash, Compare>::erase(iterator& i) {
+typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<Key, Value, H, BitExtractor, Hash, Compare>::erase(const iterator& i) {
+    auto j = i;
+    ++j;
     _trie.remove(i.leaf, i.xleaf);
     delete i.leaf;
+    return j;
 }
 
 }

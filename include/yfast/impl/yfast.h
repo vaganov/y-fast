@@ -20,13 +20,9 @@ private:
 
 public:
     struct Where {
-        const YFastTrie* const trie;
+        const YFastTrie* trie;
         XFastLeaf* xleaf;
         Leaf* leaf;
-
-        Where(): Where(nullptr) {}
-        explicit Where(const YFastTrie* trie): Where(trie, nullptr, nullptr) {}
-        Where(const YFastTrie* trie, XFastLeaf* xleaf, Leaf* leaf): trie(trie), xleaf(xleaf), leaf(leaf) {}
     };
 
 private:

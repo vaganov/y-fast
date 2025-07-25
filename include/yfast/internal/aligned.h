@@ -15,7 +15,7 @@ struct align_traits<void> {
 
 template <typename T>
 struct align_traits {
-    static constexpr auto ptr_alignment = sizeof(T);
+    static constexpr auto ptr_alignment = alignof(T);
 };
 
 template <unsigned int N, typename T = void>

@@ -93,7 +93,7 @@ int main() {
 
     map.clear();
 
-    yfast::fastmap<std::uint32_t, void, N1> fastmap;
+    yfast::fastmap<std::uint32_t, void, N1, yfast::impl::BitExtractor<std::uint32_t>, std::unordered_map<std::uint32_t, std::uintptr_t>> fastmap;
 
     for (auto i = 0; i < M0; ++i) {
         auto key = shuffle[i];
