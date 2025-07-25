@@ -112,7 +112,10 @@ public:
         return _null_iterator;
     }
 
-    iterator find(const Key& key) const;
+    iterator find(const Key& key) const {
+        auto where = _trie.find(key);
+        return iterator(where);
+    }
 
     typename YFastLeaf::DerefType& operator [] (const Key& key) {
         auto i = find(key);
@@ -125,40 +128,28 @@ public:
     }
 
     template <typename ... Args>
-    iterator insert(const Key& key, Args ... args);
-    iterator erase(const iterator& i);
+    iterator insert(const Key& key, Args ... args) {
+        auto leaf = new YFastLeaf(key, args ...);
+        auto where = _trie.insert(leaf);
+        if (where.leaf != leaf) {
+            delete where.leaf;
+            where.leaf = leaf;
+        }
+        return iterator(where);
+    }
+
+    iterator erase(const iterator& i) {
+        auto j = i;
+        ++j;
+        _trie.remove(i.leaf, i.xleaf);
+        delete i.leaf;
+        return j;
+    }
 
     void clear() {
         _trie.clear();
     }
 };
-
-template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash, typename Compare>
-typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<Key, Value, H, BitExtractor, Hash, Compare>::find(const Key& key) const {
-    auto where = _trie.find(key);
-    return iterator(where);
-}
-
-template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash, typename Compare>
-template <typename ... Args>
-typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<Key, Value, H, BitExtractor, Hash, Compare>::insert(const Key& key, Args ... args) {
-    auto leaf = new YFastLeaf(key, args ...);
-    auto where = _trie.insert(leaf);
-    if (where.leaf != leaf) {
-        delete where.leaf;
-        where.leaf = leaf;
-    }
-    return iterator(where);
-}
-
-template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash, typename Compare>
-typename fastmap<Key, Value, H, BitExtractor, Hash, Compare>::iterator fastmap<Key, Value, H, BitExtractor, Hash, Compare>::erase(const iterator& i) {
-    auto j = i;
-    ++j;
-    _trie.remove(i.leaf, i.xleaf);
-    delete i.leaf;
-    return j;
-}
 
 }
 
