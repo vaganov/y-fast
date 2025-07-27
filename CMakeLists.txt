@@ -1,13 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
-set(SRC_DIR src)
-set(TEST_DIR test)
-set(UNIT_TEST_DIR ${TEST_DIR}/unit)
+project(yfast)
 
-set(CMAKE_CXX_FLAGS "-std=c++11 -g")
+set(CMAKE_CXX_STANDARD 20)
 
-include_directories(${SRC_DIR})
+find_package(absl CONFIG)
 
-add_executable(xfast.t ${UNIT_TEST_DIR}/xfast.t.cpp)
+include_directories(include)
 
-target_link_libraries(xfast.t gtest gtest_main pthread)
+add_executable(yfast_example examples/yfast_example.cpp)
+
+add_executable(benchmark test/benchmark.cpp)
+
+target_link_libraries(benchmark PRIVATE absl::base absl::flat_hash_map)
