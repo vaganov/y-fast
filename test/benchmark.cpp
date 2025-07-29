@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
@@ -23,18 +24,21 @@
 #include <yfast/fastmap.h>
 
 int main() {
-    auto constexpr N0 = 10;
-    auto constexpr N1 = 26;
-    auto constexpr M0 = 1 << N0;
-    auto constexpr M1 = 1 << N1;
+    constexpr auto N0 = 10;
+    constexpr auto N1 = 31;
+    constexpr unsigned long int M0 = 1UL << N0;
+    constexpr unsigned long int M1 = 1UL << N1;
+    constexpr auto max_size = std::vector<std::uint32_t>().max_size();
+    static_assert((M1 >> 1) <= max_size, "Unable to allocate even half-sized shuffle");
 
-    std::vector<std::uint32_t> shuffle(M1);
-    for (auto i = 0; i < M1; ++i) {
+    constexpr auto shuffle_size = std::min(M1, max_size);
+    std::vector<std::uint32_t> shuffle(shuffle_size);
+    for (std::uint32_t i = 0; i < shuffle_size; ++i) {
         shuffle[i] = i;
     }
 
     ::srand(time(nullptr));
-    auto unshuffled = M1;
+    auto unshuffled = shuffle_size;
     while (unshuffled > 1) {
         auto index = ::rand() % unshuffled;
         std::swap(shuffle[index], shuffle[--unshuffled]);
@@ -54,18 +58,19 @@ int main() {
     }
 
     for (auto M = M0; M < M1; M <<= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             map.insert(std::make_pair(key, key));
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " std::map insert: " << duration.count() << std::endl;
-        stats << "std::map,insert," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " std::map insert: " << duration.count() << std::endl;
+        stats << "std::map,insert," << I << "," << duration.count() << std::endl;
 
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = map.find(key);
             if (pos == map.end()) {
@@ -74,21 +79,22 @@ int main() {
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " std::map find: " << duration.count() << std::endl;
-        stats << "std::map,find," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " std::map find: " << duration.count() << std::endl;
+        stats << "std::map,find," << I << "," << duration.count() << std::endl;
     }
 
     for (auto M = M1 >> 1; M >= M0; M >>= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = map.find(key);
             map.erase(pos);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " std::map find+erase: " << duration.count() << std::endl;
-        stats << "std::map,find+erase," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " std::map find+erase: " << duration.count() << std::endl;
+        stats << "std::map,find+erase," << I << "," << duration.count() << std::endl;
     }
 
     map.clear();
@@ -101,18 +107,19 @@ int main() {
     }
 
     for (auto M = M0; M < M1; M <<= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             fastmap.insert(key);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+std::unordered_map insert: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+std::unordered_map,insert," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+std::unordered_map insert: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+std::unordered_map,insert," << I << "," << duration.count() << std::endl;
 
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap.find(key);
             if (pos == fastmap.end()) {
@@ -121,21 +128,22 @@ int main() {
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+std::unordered_map find: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+std::unordered_map,find," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+std::unordered_map find: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+std::unordered_map,find," << I << "," << duration.count() << std::endl;
     }
 
     for (auto M = M1 >> 1; M >= M0; M >>= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap.find(key);
             fastmap.erase(pos);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+std::unordered_map find+erase: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+std::unordered_map,find+erase," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+std::unordered_map find+erase: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+std::unordered_map,find+erase," << I << "," << duration.count() << std::endl;
     }
 
     fastmap.clear();
@@ -149,18 +157,19 @@ int main() {
     }
 
     for (auto M = M0; M < M1; M <<= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             fastmap_hopscotch.insert(key);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+tsl::hopscotch insert: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+tsl::hopscotch,insert," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+tsl::hopscotch insert: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+tsl::hopscotch,insert," << I << "," << duration.count() << std::endl;
 
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap_hopscotch.find(key);
             if (pos == fastmap_hopscotch.end()) {
@@ -169,21 +178,22 @@ int main() {
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+tsl::hopscotch find: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+tsl::hopscotch,find," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+tsl::hopscotch find: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+tsl::hopscotch,find," << I << "," << duration.count() << std::endl;
     }
 
     for (auto M = M1 >> 1; M >= M0; M >>= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap_hopscotch.find(key);
             fastmap_hopscotch.erase(pos);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+tsl::hopscotch find+erase: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+tsl::hopscotch,find+erase," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+tsl::hopscotch find+erase: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+tsl::hopscotch,find+erase," << I << "," << duration.count() << std::endl;
     }
 
     fastmap_hopscotch.clear();
@@ -198,18 +208,19 @@ int main() {
     }
 
     for (auto M = M0; M < M1; M <<= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             fastmap_flat_hash.insert(key);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+absl::flat_hash_map insert: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+absl::flat_hash_map,insert," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+absl::flat_hash_map insert: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+absl::flat_hash_map,insert," << I << "," << duration.count() << std::endl;
 
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap_flat_hash.find(key);
             if (pos == fastmap_flat_hash.end()) {
@@ -218,21 +229,22 @@ int main() {
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+absl::flat_hash_map find: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+absl::flat_hash_map,find," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+absl::flat_hash_map find: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+absl::flat_hash_map,find," << I << "," << duration.count() << std::endl;
     }
 
     for (auto M = M1 >> 1; M >= M0; M >>= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap_flat_hash.find(key);
             fastmap_flat_hash.erase(pos);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+absl::flat_hash_map find+erase: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+absl::flat_hash_map,find+erase," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+absl::flat_hash_map find+erase: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+absl::flat_hash_map,find+erase," << I << "," << duration.count() << std::endl;
     }
 
     fastmap_flat_hash.clear();
@@ -247,18 +259,19 @@ int main() {
     }
 
     for (auto M = M0; M < M1; M <<= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             fastmap_dense_map.insert(key);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+ankerl::unordered_dense::map insert: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+ankerl::unordered_dense::map,insert," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+ankerl::unordered_dense::map insert: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+ankerl::unordered_dense::map,insert," << I << "," << duration.count() << std::endl;
 
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap_dense_map.find(key);
             if (pos == fastmap_dense_map.end()) {
@@ -267,21 +280,22 @@ int main() {
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+ankerl::unordered_dense::map find: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+ankerl::unordered_dense::map,find," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+ankerl::unordered_dense::map find: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+ankerl::unordered_dense::map,find," << I << "," << duration.count() << std::endl;
     }
 
     for (auto M = M1 >> 1; M >= M0; M >>= 1) {
+        const auto I = std::min(M, shuffle_size - M);
         start = std::chrono::high_resolution_clock::now();
-        for (auto i = 0; i < M; ++i) {
+        for (auto i = 0; i < I; ++i) {
             auto key = shuffle[M + i];
             auto pos = fastmap_dense_map.find(key);
             fastmap_dense_map.erase(pos);
         }
         stop = std::chrono::high_resolution_clock::now();
         duration = stop - start;
-        std::cout << "M=" << M << " yfast::fastmap+ankerl::unordered_dense::map find+erase: " << duration.count() << std::endl;
-        stats << "yfast::fastmap+ankerl::unordered_dense::map,find+erase," << M << "," << duration.count() << std::endl;
+        std::cout << "M=" << I << " yfast::fastmap+ankerl::unordered_dense::map find+erase: " << duration.count() << std::endl;
+        stats << "yfast::fastmap+ankerl::unordered_dense::map,find+erase," << I << "," << duration.count() << std::endl;
     }
 
     fastmap_dense_map.clear();
