@@ -135,19 +135,37 @@ Tests have been run on AWS _r6a.8xlarge_ and _m6g.16xlarge_ instances. Sample si
 the y-axis
 
 #### ARM64, find
-![uint32-arm64-find](plots/benchmark-uint32-arm64-find.png)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-arm64-find-dark.png">
+<img alt="uint32-arm64-find" src="plots/benchmark-uint32-arm64-find.png">
+</picture>
 
 #### ARM64, insert
-![uint32-arm64-insert](plots/benchmark-uint32-arm64-insert.png)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-arm64-insert-dark.png">
+<img alt="uint32-arm64-insert" src="plots/benchmark-uint32-arm64-insert.png">
+</picture>
 
 #### ARM64, find+erase
-![uint32-arm64-erase](plots/benchmark-uint32-arm64-erase.png)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-arm64-erase-dark.png">
+<img alt="uint32-arm64-erase" src="plots/benchmark-uint32-arm64-erase.png">
+</picture>
 
 #### x86-64, find
-![uint32-x64-find](plots/benchmark-uint32-x64-find.png)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-x64-find-dark.png">
+<img alt="uint32-x64-find" src="plots/benchmark-uint32-x64-find.png">
+</picture>
 
 #### x86-64, insert
-![uint32-x64-insert](plots/benchmark-uint32-x64-insert.png)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-x64-insert-dark.png">
+<img alt="uint32-x64-insert" src="plots/benchmark-uint32-x64-insert.png">
+</picture>
 
 #### x86-64, find+erase
-![uint32-x64-erase](plots/benchmark-uint32-x64-erase.png)
+<picture>
+<source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-x64-erase-dark.png">
+<img alt="uint32-x64-erase" src="plots/benchmark-uint32-x64-erase.png">
+</picture>
