@@ -34,7 +34,7 @@ public:
         if (new_node != node) {
             return new_node;
         }
-        node->balance_factor = 0;
+        node->set_balanced();
         for (auto probe = node; probe != nullptr; probe = probe->parent) {
             auto parent = probe->parent;
             if (parent == nullptr) {
@@ -42,9 +42,9 @@ public:
             }
             auto grand_parent = parent->parent;
             Node* new_subroot;
-            if (probe == parent->left) {
-                if (parent->balance_factor < 0) {
-                    if (probe->balance_factor > 0) {
+            if (probe == parent->left()) {
+                if (parent->is_left_heavy()) {
+                    if (probe->is_right_heavy()) {
                         new_subroot = rotate_left_right(parent, probe);
                     }
                     else {
@@ -52,19 +52,19 @@ public:
                     }
                 }
                 else {
-                    if (parent->balance_factor > 0) {
-                        parent->balance_factor = 0;
+                    if (parent->is_right_heavy()) {
+                        parent->set_balanced();
                         break;
                     }
                     else {
-                        parent->balance_factor = -1;
+                        parent->set_left_heavy();
                         continue;
                     }
                 }
             }
             else {
-                if (parent->balance_factor > 0) {
-                    if (probe->balance_factor < 0) {
+                if (parent->is_right_heavy()) {
+                    if (probe->is_left_heavy()) {
                         new_subroot = rotate_right_left(parent, probe);
                     }
                     else {
@@ -72,18 +72,18 @@ public:
                     }
                 }
                 else {
-                    if (parent->balance_factor < 0) {
-                        parent->balance_factor = 0;
+                    if (parent->is_left_heavy()) {
+                        parent->set_balanced();
                         break;
                     }
                     else {
-                        parent->balance_factor = 1;
+                        parent->set_right_heavy();
                         continue;
                     }
                 }
             }
             if (grand_parent != nullptr) {
-                if (parent == grand_parent->left) {
+                if (parent == grand_parent->left()) {
                     link_left(grand_parent, new_subroot);
                 }
                 else {
@@ -107,17 +107,25 @@ public:
         bool is_left_child = remove_report.is_left_child;
 
         if (substitution != new_subroot) {
-            substitution->balance_factor = node->balance_factor;
+            if (node->is_left_heavy()) {
+                substitution->set_left_heavy();
+            }
+            else if (node->is_right_heavy()) {
+                substitution->set_right_heavy();
+            }
+            else {
+                substitution->set_balanced();
+            }
         }
 
         while (parent != nullptr) {
-            int sibling_balance_factor;
+            bool sibling_balanced;
             auto grand_parent = parent->parent;
             if (is_left_child) {
-                auto sibling = parent->right;
-                if (parent->balance_factor > 0) {
-                    sibling_balance_factor = sibling->balance_factor;
-                    if (sibling_balance_factor < 0) {
+                auto sibling = parent->right();
+                if (parent->is_right_heavy()) {
+                    sibling_balanced = sibling->is_balanced();
+                    if (sibling->is_left_heavy()) {
                         new_subroot = rotate_right_left(parent, sibling);
                     }
                     else {
@@ -125,24 +133,24 @@ public:
                     }
                 }
                 else {
-                    if (parent->balance_factor == 0) {
-                        parent->balance_factor = 1;
+                    if (parent->is_balanced()) {
+                        parent->set_right_heavy();
                         break;
                     }
                     new_subroot = parent;
-                    new_subroot->balance_factor = 0;
+                    new_subroot->set_balanced();
                     parent = grand_parent;
                     if (parent != nullptr) {
-                        is_left_child = (new_subroot == parent->left);
+                        is_left_child = (new_subroot == parent->left());
                     }
                     continue;
                 }
             }
             else {
-                auto sibling = parent->left;
-                if (parent->balance_factor < 0) {
-                    sibling_balance_factor = sibling->balance_factor;
-                    if (sibling_balance_factor > 0) {
+                auto sibling = parent->left();
+                if (parent->is_left_heavy()) {
+                    sibling_balanced = sibling->is_balanced();
+                    if (sibling->is_right_heavy()) {
                         new_subroot = rotate_left_right(parent, sibling);
                     }
                     else {
@@ -150,21 +158,21 @@ public:
                     }
                 }
                 else {
-                    if (parent->balance_factor == 0) {
-                        parent->balance_factor = -1;
+                    if (parent->is_balanced()) {
+                        parent->set_left_heavy();
                         break;
                     }
                     new_subroot = parent;
-                    new_subroot->balance_factor = 0;
+                    new_subroot->set_balanced();
                     parent = grand_parent;
                     if (parent != nullptr) {
-                        is_left_child = (new_subroot == parent->left);
+                        is_left_child = (new_subroot == parent->left());
                     }
                     continue;
                 }
             }
             if (grand_parent != nullptr) {
-                if (parent == grand_parent->left) {
+                if (parent == grand_parent->left()) {
                     link_left(grand_parent, new_subroot);
                     is_left_child = true;
                 }
@@ -177,7 +185,7 @@ public:
                 new_subroot->parent = nullptr;
                 _root = new_subroot;
             }
-            if (sibling_balance_factor == 0) {
+            if (sibling_balanced) {
                 break;
             }
             parent = grand_parent;
@@ -190,7 +198,7 @@ public:
             return { AVL(_cmp), AVL(_cmp), nullptr };
         }
 
-        SplitResult split_result { AVL(_root->left, _cmp), AVL(_root->right, _cmp), _root };
+        SplitResult split_result { AVL(_root->left(), _cmp), AVL(_root->right(), _cmp), _root };
         split_result.left.insert(_root);
 
         _root = nullptr;
@@ -212,7 +220,7 @@ public:
             int probe_height = height(probe);
             while (probe_height < right_height) {
                 probe = probe->parent;
-                if (probe->balance_factor < 0) {
+                if (probe->is_left_heavy()) {
                     probe_height += 2;
                 }
                 else {
@@ -225,12 +233,20 @@ public:
             link_right(new_subroot, right._root);
             link_right(parent, new_subroot);
             update_size_path(new_subroot);
-            new_subroot->balance_factor = right_height - probe_height;
+            if (right_height > probe_height) {
+                new_subroot->set_right_heavy();
+            }
+            else if (right_height < probe_height) {
+                new_subroot->set_left_heavy();
+            }
+            else {
+                new_subroot->set_balanced();
+            }
 
             while (parent != nullptr) {
                 auto grand_parent = parent->parent;
-                if (parent->balance_factor > 0) {
-                    if (new_subroot->balance_factor < 0) {
+                if (parent->is_right_heavy()) {
+                    if (new_subroot->is_left_heavy()) {
                         auto node = rotate_right_left(parent, new_subroot);
                         if (grand_parent != nullptr) {
                             link_right(grand_parent, node);
@@ -250,7 +266,7 @@ public:
                             node->parent = nullptr;
                             left._root = node;
                         }
-                        if (node->balance_factor == 0) {
+                        if (node->is_balanced()) {
                             break;
                         }
                         // new_subroot = node; // redundant
@@ -258,10 +274,11 @@ public:
                     }
                 }
                 else {
-                    ++(parent->balance_factor);
-                    if (parent->balance_factor == 0) {
+                    if (parent->is_left_heavy()) {
+                        parent->set_balanced();
                         break;
                     }
+                    parent->set_right_heavy();
                     new_subroot = parent;
                     parent = grand_parent;
                 }
@@ -275,7 +292,7 @@ public:
             int probe_height = height(probe);
             while (probe_height < left_height) {
                 probe = probe->parent;
-                if (probe->balance_factor > 0) {
+                if (probe->is_right_heavy()) {
                     probe_height += 2;
                 }
                 else {
@@ -288,12 +305,20 @@ public:
             link_right(new_subroot, probe);
             link_left(parent, new_subroot);
             update_size_path(new_subroot);
-            new_subroot->balance_factor = probe_height - left_height;
+            if (probe_height < left_height) {
+                new_subroot->set_left_heavy();
+            }
+            else if (probe_height > left_height) {
+                new_subroot->set_right_heavy();
+            }
+            else {
+                new_subroot->set_balanced();
+            }
 
             while (parent != nullptr) {
                 auto grand_parent = parent->parent;
-                if (parent->balance_factor < 0) {
-                    if (new_subroot->balance_factor > 0) {
+                if (parent->is_left_heavy()) {
+                    if (new_subroot->is_right_heavy()) {
                         auto node = rotate_left_right(parent, new_subroot);
                         if (grand_parent != nullptr) {
                             link_left(grand_parent, node);
@@ -313,7 +338,7 @@ public:
                             node->parent = nullptr;
                             right._root = node;
                         }
-                        if (node->balance_factor == 0) {
+                        if (node->is_balanced()) {
                             break;
                         }
                         // new_subroot = node; // redundant
@@ -321,10 +346,11 @@ public:
                     }
                 }
                 else {
-                    --(parent->balance_factor);
-                    if (parent->balance_factor == 0) {
+                    if (parent->is_right_heavy()) {
+                        parent->set_balanced();
                         break;
                     }
+                    parent->set_left_heavy();
                     new_subroot = parent;
                     parent = grand_parent;
                 }
@@ -337,7 +363,15 @@ public:
         link_left(new_subroot, left._root);
         link_right(new_subroot, right._root);
         update_size(new_subroot);
-        new_subroot->balance_factor = right_height - left_height;
+        if (left_height > right_height) {
+            new_subroot->set_left_heavy();
+        }
+        else if (right_height > left_height) {
+            new_subroot->set_right_heavy();
+        }
+        else {
+            new_subroot->set_balanced();
+        }
         left._root = nullptr;
         right._root = nullptr;
         return AVL(new_subroot, left._cmp);
@@ -358,107 +392,107 @@ private:
         if (node == nullptr) {
             return 0;
         }
-        if (node->balance_factor > 0) {
-            return 2 + height(node->left);
+        if (node->is_right_heavy()) {
+            return 2 + height(node->left());
         }
-        if (node->balance_factor < 0) {
-            return 2 + height(node->right);
+        if (node->is_left_heavy()) {
+            return 2 + height(node->right());
         }
-        return 1 + height(node->right);
+        return 1 + height(node->right());
     }
 
     static Node* rotate_left(Node* parent, Node* child) {
-        link_right(parent, child->left);
+        link_right(parent, child->left());
         link_left(child, parent);
 
         update_size(parent);
         update_size(child);
 
-        if (child->balance_factor == 0) {
-            parent->balance_factor = 1;
-            child->balance_factor = -1;
+        if (child->is_balanced()) {
+            parent->set_right_heavy();
+            child->set_left_heavy();
         }
         else {
-            parent->balance_factor = 0;
-            child->balance_factor = 0;
+            parent->set_balanced();
+            child->set_balanced();
         }
 
         return child;
     }
 
     static Node* rotate_right(Node* parent, Node* child) {
-        link_left(parent, child->right);
+        link_left(parent, child->right());
         link_right(child, parent);
 
         update_size(parent);
         update_size(child);
 
-        if (child->balance_factor == 0) {
-            parent->balance_factor = -1;
-            child->balance_factor = 1;
+        if (child->is_balanced()) {
+            parent->set_left_heavy();
+            child->set_right_heavy();
         }
         else {
-            parent->balance_factor = 0;
-            child->balance_factor = 0;
+            parent->set_balanced();
+            child->set_balanced();
         }
 
         return child;
     }
 
     static Node* rotate_right_left(Node* parent, Node* child) {
-        auto grand_child = child->left;
+        auto grand_child = child->left();
 
-        link_left(child, grand_child->right);
+        link_left(child, grand_child->right());
         link_right(grand_child, child);
-        link_right(parent, grand_child->left);
+        link_right(parent, grand_child->left());
         link_left(grand_child, parent);
 
         update_size(parent);
         update_size(child);
         update_size(grand_child);
 
-        if (grand_child->balance_factor == 0) {
-            parent->balance_factor = 0;
-            child->balance_factor = 0;
+        if (grand_child->is_balanced()) {
+            parent->set_balanced();
+            child->set_balanced();
         }
-        else if (grand_child->balance_factor > 0) {
-            parent->balance_factor = -1;
-            child->balance_factor = 0;
+        else if (grand_child->is_right_heavy()) {
+            parent->set_left_heavy();
+            child->set_balanced();
         }
         else {
-            parent->balance_factor = 0;
-            child->balance_factor = 1;
+            parent->set_balanced();
+            child->set_right_heavy();
         }
-        grand_child->balance_factor = 0;
+        grand_child->set_balanced();
 
         return grand_child;
     }
 
     static Node* rotate_left_right(Node* parent, Node* child) {
-        auto grand_child = child->right;
+        auto grand_child = child->right();
 
-        link_right(child, grand_child->left);
+        link_right(child, grand_child->left());
         link_left(grand_child, child);
-        link_left(parent, grand_child->right);
+        link_left(parent, grand_child->right());
         link_right(grand_child, parent);
 
         update_size(parent);
         update_size(child);
         update_size(grand_child);
 
-        if (grand_child->balance_factor == 0) {
-            parent->balance_factor = 0;
-            child->balance_factor = 0;
+        if (grand_child->is_balanced()) {
+            parent->set_balanced();
+            child->set_balanced();
         }
-        else if (grand_child->balance_factor > 0) {
-            parent->balance_factor = 0;
-            child->balance_factor = -1;
+        else if (grand_child->is_right_heavy()) {
+            parent->set_balanced();
+            child->set_left_heavy();
         }
         else {
-            parent->balance_factor = 1;
-            child->balance_factor = 0;
+            parent->set_right_heavy();
+            child->set_balanced();
         }
-        grand_child->balance_factor = 0;
+        grand_child->set_balanced();
 
         return grand_child;
     }

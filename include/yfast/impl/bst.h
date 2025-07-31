@@ -41,10 +41,10 @@ public:
         auto probe = _root;
         while (probe != nullptr) {
             if (_cmp(probe->key, key)) {
-                probe = probe->right;
+                probe = probe->right();
             }
             else if (_cmp(key, probe->key)) {
-                probe = probe->left;
+                probe = probe->left();
             }
             else {
                 return probe;
@@ -84,12 +84,12 @@ public:
             if (_cmp(node->key, probe->key)) {
                 left_path = true;
                 parent = probe;
-                probe = parent->left;
+                probe = parent->left();
             }
             else if (_cmp(probe->key, node->key)) {
                 left_path = false;
                 parent = probe;
-                probe = parent->right;
+                probe = parent->right();
             }
             else {
                 return probe;  // TODO: replace?
@@ -97,16 +97,16 @@ public:
         }
 
         node->parent = parent;
-        node->left = nullptr;
-        node->right = nullptr;
+        node->set_left(nullptr);
+        node->set_right(nullptr);
         node->size = 1;
 
         if (parent != nullptr) {
             if (left_path) {  // NB: assigned if 'parent' non-null
-                parent->left = node;
+                parent->set_left(node);
             }
             else {
-                parent->right = node;
+                parent->set_right(node);
             }
         }
         else {
@@ -122,7 +122,7 @@ public:
         auto parent = node->parent;
         bool left_path;
         if (parent != nullptr) {
-            if (node == parent->left) {
+            if (node == parent->left()) {
                 left_path = true;
             }
             else {
@@ -130,13 +130,13 @@ public:
             }
         }
 
-        if (node->left == nullptr && node->right == nullptr) {
+        if (node->left() == nullptr && node->right() == nullptr) {
             if (parent != nullptr) {
                 if (left_path) {  // NB: assigned if 'parent' non-null
-                    parent->left = nullptr;
+                    parent->set_left(nullptr);
                 }
                 else {
-                    parent->right = nullptr;
+                    parent->set_right(nullptr);
                 }
             }
             else {
@@ -146,57 +146,57 @@ public:
             return { nullptr, parent, nullptr, left_path };
         }
 
-        if (node->left == nullptr) {  // => node->right != nullptr
+        if (node->left() == nullptr) {  // => node->right != nullptr
             if (parent != nullptr) {
                 if (left_path) {  // NB: assigned if 'parent' non-null
-                    link_left(parent, node->right);
+                    link_left(parent, node->right());
                 }
                 else {
-                    link_right(parent, node->right);
+                    link_right(parent, node->right());
                 }
             }
             else {
-                _root = node->right;
+                _root = node->right();
                 _root->parent = nullptr;
             }
             dec_size_path(parent);
-            return { node->right, parent, node->right, left_path };
+            return { node->right(), parent, node->right(), left_path };
         }
 
-        if (node->right == nullptr) {  // => node->left != nullptr
+        if (node->right() == nullptr) {  // => node->left != nullptr
             if (parent != nullptr) {
                 if (left_path) {  // NB: assigned if 'parent' non-null
-                    link_left(parent, node->left);
+                    link_left(parent, node->left());
                 }
                 else {
-                    link_right(parent, node->left);
+                    link_right(parent, node->left());
                 }
             }
             else {
-                _root = node->left;
+                _root = node->left();
                 _root->parent = nullptr;
             }
             dec_size_path(parent);
-            return { node->left, parent, node->left, left_path };
+            return { node->left(), parent, node->left(), left_path };
         }
 
         Node* subtree_parent;
         Node* subtree_child;
         bool is_left_child;
         auto succ = BST::succ(node);
-        if (succ == node->right) {
-            link_left(succ, node->left);
+        if (succ == node->right()) {
+            link_left(succ, node->left());
             succ->size = node->size;
             subtree_parent = succ;
-            subtree_child = succ->right;
+            subtree_child = succ->right();
             is_left_child = false;
         }
         else {
             subtree_parent = succ->parent;
-            subtree_child = succ->right;
-            link_left(succ->parent, succ->right);
-            link_left(succ, node->left);
-            link_right(succ, node->right);
+            subtree_child = succ->right();
+            link_left(succ->parent, succ->right());
+            link_left(succ, node->left());
+            link_right(succ, node->right());
             succ->size = node->size;
             is_left_child = true;
         }
@@ -217,11 +217,11 @@ public:
     }
 
     static Node* pred(Node* node) {
-        if (node->left != nullptr) {
-            return _rightmost(node->left);
+        if (node->left() != nullptr) {
+            return _rightmost(node->left());
         }
         for (auto probe = node; probe->parent != nullptr; probe = probe->parent) {
-            if (probe == probe->parent->right) {
+            if (probe == probe->parent->right()) {
                 return probe->parent;
             }
         }
@@ -229,11 +229,11 @@ public:
     }
 
     static Node* succ(Node* node) {
-        if (node->right != nullptr) {
-            return _leftmost(node->right);
+        if (node->right() != nullptr) {
+            return _leftmost(node->right());
         }
         for (auto probe = node; probe->parent != nullptr; probe = probe->parent) {
-            if (probe == probe->parent->left) {
+            if (probe == probe->parent->left()) {
                 return probe->parent;
             }
         }
@@ -253,11 +253,11 @@ protected:
         while (probe != nullptr) {
             if (_cmp(probe->key, key)) {
                 parent = probe;
-                probe = parent->right;
+                probe = parent->right();
             }
             else if (_cmp(key, probe->key)) {
                 parent = probe;
-                probe = parent->left;
+                probe = parent->left();
             }
             else {
                 return probe;
@@ -268,23 +268,23 @@ protected:
 
     static Node* _leftmost(Node* node) {
         auto probe = node;
-        while (probe->left != nullptr) {
-            probe = probe->left;
+        while (probe->left() != nullptr) {
+            probe = probe->left();
         }
         return probe;
     }
 
     static Node* _rightmost(Node* node) {
         auto probe = node;
-        while (probe->right != nullptr) {
-            probe = probe->right;
+        while (probe->right() != nullptr) {
+            probe = probe->right();
         }
         return probe;
     }
 
     static void link_left(Node* parent, Node* child) {
         if (parent != nullptr) {
-            parent->left = child;
+            parent->set_left(child);
         }
         if (child != nullptr) {
             child->parent = parent;
@@ -293,7 +293,7 @@ protected:
 
     static void link_right(Node* parent, Node* child) {
         if (parent != nullptr) {
-            parent->right = child;
+            parent->set_right(child);
         }
         if (child != nullptr) {
             child->parent = parent;
@@ -302,8 +302,10 @@ protected:
 
     static void update_size(Node* node) {
         if (node != nullptr) {
-            auto left_size = node->left != nullptr ? node->left->size : 0;
-            auto right_size = node->right != nullptr ? node->right->size : 0;
+            auto left = node->left();
+            auto left_size = left != nullptr ? left->size : 0;
+            auto right = node->right();
+            auto right_size = right != nullptr ? right->size : 0;
             node->size = 1 + left_size + right_size;
         }
     }
@@ -329,8 +331,8 @@ protected:
 private:
     static void destroy(Node* node) {
         if (node != nullptr) {
-            destroy(node->left);
-            destroy(node->right);
+            destroy(node->left());
+            destroy(node->right());
             delete node;
         }
     }
