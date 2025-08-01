@@ -32,11 +32,11 @@ private:
     class IteratorBase: private YFastTrie::Where {
         friend class fastmap;
 
-        unsigned int _last_rebuild = 0;
-
         using YFastTrie::Where::leaf;
         using YFastTrie::Where::xleaf;
         using YFastTrie::Where::trie;
+
+        unsigned int _last_rebuild = 0;
 
     public:
         typedef const typename YFastLeaf::Key key_type;
@@ -46,7 +46,12 @@ private:
         IteratorBase() = default;
         explicit IteratorBase(const typename YFastTrie::Where& where): YFastTrie::Where(where), _last_rebuild(trie->rebuilds()) {}
 
-        void inc() {
+        template <bool Const_>
+        bool same_as(const IteratorBase<Const_>& other) const {
+            return trie == other.trie && leaf == other.leaf;
+        }
+
+        void forward() {
             auto succ = YFastTrie::Value::succ(leaf);
             if (succ != nullptr) {
                 leaf = succ;
@@ -67,7 +72,7 @@ private:
             }
         }
 
-        void dec() {
+        void backward() {
             auto pred = YFastTrie::Value::pred(leaf);
             if (pred != nullptr) {
                 leaf = pred;
@@ -89,16 +94,6 @@ private:
         }
 
     public:
-        template <bool Const_>
-        bool operator == (const IteratorBase<Const_>& other) const {
-            return leaf == other.leaf;
-        }
-
-        template <bool Const_>
-        bool operator != (const IteratorBase<Const_>& other) const {
-            return leaf != other.leaf;
-        }
-
         key_type& key() const {
             if (leaf == nullptr) {
                 throw std::out_of_range("yfast::fastmap::iterator");
@@ -130,81 +125,136 @@ private:
 
     template <bool Const>
     class ForwardIteratorBase: public IteratorBase<Const> {
+        friend class fastmap;
+
+        using IteratorBase<Const>::leaf;
+        using IteratorBase<Const>::trie;
+        using IteratorBase<Const>::same_as;
+        using IteratorBase<Const>::forward;
+        using IteratorBase<Const>::backward;
+
     protected:
         ForwardIteratorBase() = default;
         explicit ForwardIteratorBase(const typename YFastTrie::Where& where): IteratorBase<Const>(where) {}
+
+        void inc() {
+            if (leaf != nullptr) {
+                forward();
+            }
+        }
+
+        void dec() {
+            if (leaf != nullptr) {
+                backward();
+            }
+            else {
+                *this = ForwardIteratorBase(trie->rightmost());
+            }
+        }
+
     public:
-        ForwardIteratorBase& operator ++ () {
-            this->inc();
-            return *this;
+        template <bool Const_>
+        bool operator == (const ForwardIteratorBase<Const_>& other) const {
+            return same_as(other);
         }
 
-        ForwardIteratorBase operator ++ (int) {
-            auto i = *this;
-            this->inc();
-            return i;
-        }
-
-        ForwardIteratorBase& operator -- () {
-            this->dec();
-            return *this;
-        }
-
-        ForwardIteratorBase operator -- (int) {
-            auto i = *this;
-            this->dec();
-            return i;
+        template <bool Const_>
+        bool operator != (const ForwardIteratorBase<Const_>& other) const {
+            return !same_as(other);
         }
     };
 
     template <bool Const>
     class ReverseIteratorBase: public IteratorBase<Const> {
+        friend class fastmap;
+
+        using IteratorBase<Const>::leaf;
+        using IteratorBase<Const>::trie;
+        using IteratorBase<Const>::same_as;
+        using IteratorBase<Const>::forward;
+        using IteratorBase<Const>::backward;
+
     protected:
         ReverseIteratorBase() = default;
         explicit ReverseIteratorBase(const typename YFastTrie::Where& where): IteratorBase<Const>(where) {}
+
+        void inc() {
+            if (leaf != nullptr) {
+                backward();
+            }
+        }
+
+        void dec() {
+            if (leaf != nullptr) {
+                forward();
+            }
+            else {
+                *this = ReverseIteratorBase(trie->leftmost());
+            }
+        }
+
     public:
-        ReverseIteratorBase& operator ++ () {
-            this->dec();
-            return *this;
+        template <bool Const_>
+        bool operator == (const ReverseIteratorBase<Const_>& other) const {
+            return same_as(other);
         }
 
-        ReverseIteratorBase operator ++ (int) {
-            auto i = *this;
-            this->dec();
-            return i;
-        }
-
-        ReverseIteratorBase& operator -- () {
-            this->inc();
-            return *this;
-        }
-
-        ReverseIteratorBase operator -- (int) {
-            auto i = *this;
-            this->inc();
-            return i;
+        template <bool Const_>
+        bool operator != (const ReverseIteratorBase<Const_>& other) const {
+            return !same_as(other);
         }
     };
 
 public:
-    // class iterator;
-    // class const_iterator;
-    // class reverse_iterator;
-    // class const_reverse_iterator;
+    class reverse_iterator;
+    class const_reverse_iterator;
 
     class iterator: public ForwardIteratorBase<false> {
         friend class fastmap;
+
+        using ForwardIteratorBase<false>::inc;
+        using ForwardIteratorBase<false>::dec;
 
         explicit iterator(const typename YFastTrie::Where& where): ForwardIteratorBase<false>(where) {}
 
     public:
         iterator() = default;
         iterator(const iterator& other) = default;
-        // iterator(const reverse_iterator& other): ForwardIteratorBase<false>(other) {}
+
+        iterator& operator ++ () {
+            inc();
+            return *this;
+        }
+
+        iterator operator ++ (int) {
+            auto i = *this;
+            inc();
+            return i;
+        }
+
+        iterator& operator -- () {
+            dec();
+            return *this;
+        }
+
+        iterator operator -- (int) {
+            auto i = *this;
+            dec();
+            return i;
+        }
+
+        reverse_iterator make_reverse() const {
+            auto i = *this;
+            const typename YFastTrie::Where& where = --i;
+            return reverse_iterator(where);
+        }
     };
 
     class const_iterator: public ForwardIteratorBase<true> {
         friend class fastmap;
+
+        using ForwardIteratorBase<true>::inc;
+        using ForwardIteratorBase<true>::dec;
 
         explicit const_iterator(const typename YFastTrie::Where& where): ForwardIteratorBase<true>(where) {}
 
@@ -212,32 +262,105 @@ public:
         const_iterator() = default;
         const_iterator(const const_iterator& other) = default;
         const_iterator(const iterator& other): ForwardIteratorBase<true>(other) {}
-        // const_iterator(const reverse_iterator& other): ForwardIteratorBase<true>(other) {}
-        // const_iterator(const const_reverse_iterator& other): ForwardIteratorBase<true>(other) {}
+
+        const_iterator& operator ++ () {
+            inc();
+            return *this;
+        }
+
+        const_iterator operator ++ (int) {
+            auto i = *this;
+            inc();
+            return i;
+        }
+
+        const_iterator& operator -- () {
+            dec();
+            return *this;
+        }
+
+        const_iterator operator -- (int) {
+            auto i = *this;
+            dec();
+            return i;
+        }
+
+        const_reverse_iterator make_reverse() const {
+            auto i = *this;
+            const typename YFastTrie::Where& where = --i;
+            return const_reverse_iterator(where);
+        }
     };
 
     class reverse_iterator: public ReverseIteratorBase<false> {
         friend class fastmap;
+
+        using ReverseIteratorBase<false>::inc;
+        using ReverseIteratorBase<false>::dec;
 
         explicit reverse_iterator(const typename YFastTrie::Where& where): ReverseIteratorBase<false>(where) {}
 
     public:
         reverse_iterator() = default;
         reverse_iterator(const reverse_iterator& other) = default;
-        // reverse_iterator(const iterator& other): ReverseIteratorBase<false>(other) {}
+
+        reverse_iterator& operator ++ () {
+            inc();
+            return *this;
+        }
+
+        reverse_iterator operator ++ (int) {
+            auto i = *this;
+            inc();
+            return i;
+        }
+
+        reverse_iterator& operator -- () {
+            dec();
+            return *this;
+        }
+
+        reverse_iterator operator -- (int) {
+            auto i = *this;
+            dec();
+            return i;
+        }
     };
 
     class const_reverse_iterator: public ReverseIteratorBase<true> {
         friend class fastmap;
+
+        using ReverseIteratorBase<true>::inc;
+        using ReverseIteratorBase<true>::dec;
 
         explicit const_reverse_iterator(const typename YFastTrie::Where& where): ReverseIteratorBase<true>(where) {}
 
     public:
         const_reverse_iterator() = default;
         const_reverse_iterator(const const_reverse_iterator& other) = default;
-        // const_reverse_iterator(const iterator& other): ReverseIteratorBase<true>(other) {}
         const_reverse_iterator(const reverse_iterator& other): ReverseIteratorBase<true>(other) {}
-        // const_reverse_iterator(const const_iterator& other): ReverseIteratorBase<true>(other) {}
+
+        const_reverse_iterator& operator ++ () {
+            inc();
+            return *this;
+        }
+
+        const_reverse_iterator operator ++ (int) {
+            auto i = *this;
+            inc();
+            return i;
+        }
+
+        const_reverse_iterator& operator -- () {
+            dec();
+            return *this;
+        }
+
+        const_reverse_iterator operator -- (int) {
+            auto i = *this;
+            dec();
+            return i;
+        }
     };
 
 private:
@@ -253,7 +376,7 @@ public:
     }
 
     iterator end() {
-        return iterator();
+        return iterator({ &_trie, nullptr, nullptr });
     }
 
     const_iterator begin() const {
@@ -261,7 +384,7 @@ public:
     }
 
     const_iterator end() const {
-        return const_iterator();
+        return const_iterator({ &_trie, nullptr, nullptr });
     }
 
     const_iterator cbegin() const {
@@ -269,7 +392,7 @@ public:
     }
 
     const_iterator cend() const {
-        return const_iterator();
+        return const_iterator({ &_trie, nullptr, nullptr });
     }
 
     reverse_iterator rbegin() {
@@ -277,7 +400,7 @@ public:
     }
 
     reverse_iterator rend() {
-        return reverse_iterator();
+        return reverse_iterator({ &_trie, nullptr, nullptr });
     }
 
     const_reverse_iterator rbegin() const {
@@ -285,7 +408,7 @@ public:
     }
 
     const_reverse_iterator rend() const {
-        return const_reverse_iterator();
+        return const_reverse_iterator({ &_trie, nullptr, nullptr });
     }
 
     const_reverse_iterator crbegin() const {
@@ -293,7 +416,7 @@ public:
     }
 
     const_reverse_iterator crend() const {
-        return const_reverse_iterator();
+        return const_reverse_iterator({ &_trie, nullptr, nullptr });
     }
 
     iterator find(const Key& key) {
@@ -337,7 +460,7 @@ public:
 
     template <typename Iterator>
     Iterator erase(const Iterator& i) {
-        if (i == end()) {
+        if (i.leaf == nullptr) {
             return i;
         }
         auto j = i;
