@@ -25,6 +25,8 @@ public:
         Leaf* leaf;
     };
 
+    const Where nowhere = { this, nullptr, nullptr };
+
 private:
     Compare _cmp;
     XFastTrie<XFastLeaf, H, BitExtractor, Compare, Hash> _trie;
