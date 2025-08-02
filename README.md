@@ -13,20 +13,13 @@ The library is in pre-release mode; basic operations are supported:
 - insert an entry
 - find an entry by key if present
 - remove an entry
-- find the predecessor
-- find the successor
 - operator []
-- iterator dereference
-- iterator increment
-- range for loop
+- iteration
 
 Yet to come:
-- iterator decrement
-- iterator post-increment
-- const iterator
-- reverse iterator
 - custom allocator
 - proper documentation
+- test coverage
 
 ## Usage
 ### Template parameters
@@ -58,33 +51,46 @@ order provided by `BitExtractor`; `std::less` is set as a default
     #include <cassert>
     #include <cstdint>
     #include <iostream>
+    #include <iterator>
     #include <string>
-
+    
     #include <unistd.h>
-
+    
     #include <yfast/fastmap.h>
-
+    #include <yfast/iterator.h>
+    
     int main() {
-        yfast::fastmap<std::uint32_t, std::string, 32> fastmap;
-
-        std::uint32_t key = 1;
-        std::string value = "one";
-        auto i = fastmap.insert(key, value);
-        auto j = fastmap.find(key);
-        assert(i == j);
-        assert(*j == value);
-        assert(fastmap[key] == value);
-
+    yfast::fastmap<std::uint32_t, std::string, 32> fastmap;
+    
+        fastmap[3] = "three";
+        fastmap[2] = "two";
+        fastmap[1] = "one";
+    
+        std::cout << "values: ";
         for (const auto& v: fastmap) {
-            std::cout << v << " ";
+            std::cout << v << ' ';
         }
         std::cout << std::endl;
-
-        i = fastmap.erase(i);
-        assert(i == fastmap.end());
-        j = fastmap.find(key);
-        assert(j == fastmap.end());
-
+    
+        assert(fastmap.size() == std::distance(fastmap.begin(), fastmap.end()));
+    
+        auto i = fastmap.find(2);
+        auto r = yfast::make_reverse_iterator(i);
+    
+        std::cout << "erasing onward" << std::endl;
+        while (i != fastmap.end()) {
+            std::cout << i.key() << ' ' << i.value() << std::endl;
+            i = fastmap.erase(i);
+        }
+    
+        std::cout << "erasing backward" << std::endl;
+        while (r != fastmap.rend()) {
+            std::cout << r.key() << ' ' << r.value() << std::endl;
+            r = fastmap.erase(r);
+        }
+    
+        assert(fastmap.empty());
+    
         return EXIT_SUCCESS;
     }
 

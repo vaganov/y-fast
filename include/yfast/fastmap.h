@@ -2,6 +2,7 @@
 #define _YFAST_FASTMAP_H
 
 #include <functional>
+#include <iterator>
 #include <stdexcept>
 
 #include <yfast/impl/yfast.h>
@@ -41,6 +42,11 @@ private:
     public:
         typedef const typename YFastLeaf::Key key_type;
         typedef typename utils::MaybeConst<typename YFastLeaf::DerefType, Const>::Type value_type;
+
+        typedef std::bidirectional_iterator_tag iterator_category;  // TODO: random access
+        typedef std::ptrdiff_t difference_type;
+        typedef value_type* pointer;
+        typedef value_type& reference;
 
     protected:
         IteratorBase() = default;
@@ -370,13 +376,14 @@ public:
     explicit fastmap(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _trie(bx, cmp) {}
 
     [[nodiscard]] std::size_t size() const { return _trie.size(); }
+    bool empty() const { return _trie.size() == 0; }
 
     iterator begin() {
         return iterator(_trie.leftmost());
     }
 
     iterator end() {
-        return iterator({ &_trie, nullptr, nullptr });
+        return iterator(_trie.nowhere);
     }
 
     const_iterator begin() const {
@@ -384,7 +391,7 @@ public:
     }
 
     const_iterator end() const {
-        return const_iterator({ &_trie, nullptr, nullptr });
+        return const_iterator(_trie.nowhere);
     }
 
     const_iterator cbegin() const {
@@ -392,7 +399,7 @@ public:
     }
 
     const_iterator cend() const {
-        return const_iterator({ &_trie, nullptr, nullptr });
+        return const_iterator(_trie.nowhere);
     }
 
     reverse_iterator rbegin() {
@@ -400,7 +407,7 @@ public:
     }
 
     reverse_iterator rend() {
-        return reverse_iterator({ &_trie, nullptr, nullptr });
+        return reverse_iterator(_trie.nowhere);
     }
 
     const_reverse_iterator rbegin() const {
@@ -408,7 +415,7 @@ public:
     }
 
     const_reverse_iterator rend() const {
-        return const_reverse_iterator({ &_trie, nullptr, nullptr });
+        return const_reverse_iterator(_trie.nowhere);
     }
 
     const_reverse_iterator crbegin() const {
@@ -416,7 +423,7 @@ public:
     }
 
     const_reverse_iterator crend() const {
-        return const_reverse_iterator({ &_trie, nullptr, nullptr });
+        return const_reverse_iterator(_trie.nowhere);
     }
 
     iterator find(const Key& key) {
@@ -428,6 +435,36 @@ public:
         auto where = _trie.find(key);
         return const_iterator(where);
     }
+
+    iterator pred(const Key& key) {
+        auto where = _trie.pred(key);
+        return iterator(where);
+    }
+
+    const_iterator pred(const Key& key) const {
+        auto where = _trie.pred(key);
+        return const_iterator(where);
+    }
+
+    iterator succ(const Key& key) {
+        auto where = _trie.succ(key);
+        return iterator(where);
+    }
+
+    const_iterator succ(const Key& key) const {
+        auto where = _trie.succ(key);
+        return const_iterator(where);
+    }
+
+    iterator lower_bound(const Key& key) {
+        return succ(key);
+    }
+
+    const_iterator lower_bound(const Key& key) const{
+        return succ(key);
+    }
+
+    // TODO: upper_bound
 
     typename YFastLeaf::DerefType& operator [] (const Key& key) {
         auto i = find(key);
