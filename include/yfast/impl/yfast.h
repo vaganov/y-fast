@@ -1,13 +1,22 @@
 #ifndef _YFAST_IMPL_YFAST_H
 #define _YFAST_IMPL_YFAST_H
 
+#include <memory>
+
 #include <yfast/internal/concepts.h>
 #include <yfast/impl/avl.h>
 #include <yfast/internal/yfast.h>
 
 namespace yfast::impl {
 
-template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
+template <
+    typename Leaf,
+    unsigned int H,
+    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor,
+    typename Compare,
+    internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash,
+    typename ArbitraryAllocator
+>
 class YFastTrie {
 public:
     typedef typename Leaf::Key Key;
@@ -15,6 +24,8 @@ public:
     typedef internal::XFastLeaf<Key, Value> XFastLeaf;
 
 private:
+    typedef typename std::allocator_traits<ArbitraryAllocator>::template rebind_alloc<XFastLeaf> Alloc;
+
     static constexpr auto TREE_SPLIT_THRESHOLD = 2 * H;
     static constexpr auto TREE_MERGE_THRESHOLD = H / 4;
 
@@ -28,13 +39,18 @@ public:
     const Where nowhere = { this, nullptr, nullptr };
 
 private:
+    Alloc _alloc;
     Compare _cmp;
     XFastTrie<XFastLeaf, H, BitExtractor, Compare, Hash> _trie;
     unsigned int _rebuilds;
     std::size_t _size;
 
 public:
-    explicit YFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _cmp(cmp), _trie(bx, cmp), _rebuilds(0), _size(0) {}
+    explicit YFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare(), ArbitraryAllocator alloc = ArbitraryAllocator()): _alloc(alloc), _cmp(cmp), _trie(bx, cmp), _rebuilds(0), _size(0) {}
+    YFastTrie(YFastTrie&& other) noexcept: _alloc(other._alloc), _cmp(other._cmp), _trie(std::move(other._trie)), _rebuilds(other._rebuilds), _size(other._size) {
+        other._size = 0;
+        other._rebuilds = 0;
+    }
 
     [[nodiscard]] std::size_t size() const { return _size; }
     [[nodiscard]] unsigned int rebuilds() const { return _rebuilds; }
@@ -121,6 +137,11 @@ public:
         }
     }
 
+    /**
+     * insert a new leaf
+     * @param leaf leaf to insert
+     * @return Where with fields: trie -- this; xleaf -- new leaf's x-fast trie node; leaf -- NB: replaced leaf (if any)
+     */
     Where insert(Leaf* leaf) {
         auto pred = _trie.pred(leaf->key);
         auto succ = (pred != nullptr) ? pred->nxt : _trie.leftmost();
@@ -141,26 +162,32 @@ public:
             xleaf = succ;
         }
         else {
-            xleaf = new XFastLeaf(leaf->key, AVL<Leaf, Compare>(_cmp));
+            xleaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+            std::allocator_traits<Alloc>::construct(_alloc, xleaf, leaf->key, Value(_cmp));
             _trie.insert(xleaf);
         }
 
-        xleaf->value.insert(leaf);
+        auto replaced = xleaf->value.insert(leaf);
         if (xleaf->value.size() > TREE_SPLIT_THRESHOLD) {
             _trie.remove(xleaf);
             auto split_result = xleaf->value.split();
-            auto left = new XFastLeaf(split_result.left.root()->key, std::move(split_result.left));
-            auto right = new XFastLeaf(split_result.right.root()->key, std::move(split_result.right));
+            XFastLeaf* left = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+            std::allocator_traits<Alloc>::construct(_alloc, left, split_result.left.root()->key, std::move(split_result.left));
+            XFastLeaf* right = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+            std::allocator_traits<Alloc>::construct(_alloc, right, split_result.right.root()->key, std::move(split_result.right));
             _trie.insert(left);
             _trie.insert(right);
-            delete xleaf;
+            std::allocator_traits<Alloc>::destroy(_alloc, xleaf);
+            std::allocator_traits<Alloc>::deallocate(_alloc, xleaf, 1);
             xleaf = _cmp(split_result.left_max->key, leaf->key) ? right : left;
             ++_rebuilds;
         }
 
-        ++_size;
+        if (replaced == nullptr) {
+            ++_size;
+        }
 
-        return { this, xleaf, leaf };  // TODO: return replaced leaf
+        return { this, xleaf, replaced };
     }
 
     void remove(Leaf* leaf, XFastLeaf* hint = nullptr) {
@@ -181,29 +208,39 @@ public:
                 auto merged = Value::merge(std::move(xleaf->value), std::move(neighbor->value));
                 if (merged.size() > TREE_SPLIT_THRESHOLD) {
                     auto split_result = merged.split();
-                    auto left = new XFastLeaf(split_result.left.root()->key, std::move(split_result.left));
-                    auto right = new XFastLeaf(split_result.right.root()->key, std::move(split_result.right));
+                    XFastLeaf* left = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+                    std::allocator_traits<Alloc>::construct(_alloc, left, split_result.left.root()->key, std::move(split_result.left));
+                    XFastLeaf* right = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+                    std::allocator_traits<Alloc>::construct(_alloc, right, split_result.right.root()->key, std::move(split_result.right));
                     _trie.insert(left);
                     _trie.insert(right);
                 }
                 else {
-                    _trie.insert(new XFastLeaf(merged.root()->key, std::move(merged)));
+                    XFastLeaf* merged_xleaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+                    std::allocator_traits<Alloc>::construct(_alloc, merged_xleaf, merged.root()->key, std::move(merged));
+                    _trie.insert(merged_xleaf);
                 }
-                delete xleaf;
-                delete neighbor;
+                std::allocator_traits<Alloc>::destroy(_alloc, xleaf);
+                std::allocator_traits<Alloc>::deallocate(_alloc, xleaf, 1);
+                std::allocator_traits<Alloc>::destroy(_alloc, neighbor);
+                std::allocator_traits<Alloc>::deallocate(_alloc, neighbor, 1);
                 ++_rebuilds;
             }
             else if (xleaf->value.size() == 0) {
                 _trie.remove(xleaf);
-                delete xleaf;
+                std::allocator_traits<Alloc>::destroy(_alloc, xleaf);
+                std::allocator_traits<Alloc>::deallocate(_alloc, xleaf, 1);
                 ++_rebuilds;
             }
         }
         else {
             if (_cmp(xleaf->key, xleaf->value.leftmost()->key) || _cmp(xleaf->value.rightmost()->key, xleaf->key)) {
                 _trie.remove(xleaf);
-                _trie.insert(new XFastLeaf(xleaf->value.root()->key, std::move(xleaf->value)));
-                delete xleaf;
+                XFastLeaf* reinserted_xleaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+                std::allocator_traits<Alloc>::construct(_alloc, reinserted_xleaf, xleaf->value.root()->key, std::move(xleaf->value));
+                _trie.insert(reinserted_xleaf);
+                std::allocator_traits<Alloc>::destroy(_alloc, xleaf);
+                std::allocator_traits<Alloc>::deallocate(_alloc, xleaf, 1);
             }
         }
 
@@ -212,7 +249,8 @@ public:
 
     void clear() {
         for (auto xleaf = _trie.leftmost(); xleaf != nullptr; xleaf = xleaf->nxt) {
-            delete xleaf;
+            std::allocator_traits<Alloc>::destroy(_alloc, xleaf);
+            std::allocator_traits<Alloc>::deallocate(_alloc, xleaf, 1);
         }
         _trie.clear();
         _size = 0;

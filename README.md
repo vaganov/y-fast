@@ -17,7 +17,6 @@ The library is in pre-release mode; basic operations are supported:
 - iteration
 
 Yet to come:
-- custom allocator
 - proper documentation
 - test coverage
 
@@ -41,10 +40,13 @@ Yet to come:
   - `std::string` (which is basically treated as `std::vector<std::byte>`)
 - `Hash` &mdash; map from shifted keys to `std::uintptr_t`; must be compliant with
 [yfast::internal::MapGeneric](include/yfast/internal/concepts.h) concept and _default-constructible_;
-[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) is set as a default (unless `WITHOUT_HOPSCOTCH_MAP` macro
-is defined, in which case `std::unordered_map` is used)
+[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) is set as default (unless `YFAST_WITHOUT_HOPSCOTCH_MAP`
+macro is defined, in which case `std::unordered_map` is used)
 - `Compare` &mdash; key comparator; must be _copyable_; the order provided by `Compare` must match the lexicographic
 order provided by `BitExtractor`; `std::less` is set as a default
+- `ArbitraryAllocator` &mdash; allocator; this allocator will not be used directly but rather rebound via
+[std::allocator_traits::rebind_alloc](https://en.cppreference.com/w/cpp/memory/allocator_traits.html) (hence the
+parameter name). `std::allocator<Key>` is used as default
 
 ### Usage example
 
@@ -60,7 +62,7 @@ order provided by `BitExtractor`; `std::less` is set as a default
     #include <yfast/iterator.h>
     
     int main() {
-    yfast::fastmap<std::uint32_t, std::string, 32> fastmap;
+        yfast::fastmap<std::uint32_t, std::string, 32> fastmap;
     
         fastmap[3] = "three";
         fastmap[2] = "two";

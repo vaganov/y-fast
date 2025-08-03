@@ -34,6 +34,12 @@ private:
 
 public:
     explicit XFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _bx(bx), _cmp(cmp), _root(nullptr, false, false), _leftmost(nullptr), _rightmost(nullptr) {}
+    XFastTrie(const XFastTrie& other) = delete;
+    XFastTrie(XFastTrie&& other) noexcept: _bx(other._bx), _cmp(other._cmp), _root(other._root), _leftmost(other._leftmost), _rightmost(other._rightmost), _hash(std::move(other._hash)) {
+        other._root = Node(nullptr, false, false);
+        other._leftmost = nullptr;
+        other._rightmost = nullptr;
+    }
 
     Leaf* leftmost() const { return _leftmost; }
     Leaf* rightmost() const { return _rightmost; }
