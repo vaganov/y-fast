@@ -30,8 +30,6 @@ public:
         other._root = nullptr;
     }
 
-    ~BST() { destroy(_root); }
-
     [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
     Node* root() const { return _root; }
     Node* leftmost() const { return _root != nullptr ? _leftmost(_root) : nullptr; }
@@ -53,7 +51,7 @@ public:
         return nullptr;
     }
 
-    Node* pred(const Key& key) const {
+    Node* pred(const Key& key, bool strict = false) const {
         auto node = seek(key);
         if (node == nullptr) {
             return nullptr;
@@ -61,20 +59,31 @@ public:
         if (_cmp(key, node->key)) {
             return pred(node);
         }
-        return node;
+        if (_cmp(node->key, key)) {
+            return node;
+        }
+        return strict ? pred(node) : node;
     }
 
-    Node* succ(const Key& key) const {
+    Node* succ(const Key& key, bool strict = false) const {
         auto node = seek(key);
         if (node == nullptr) {
             return nullptr;
         }
+        if (_cmp(key, node->key)) {
+            return node;
+        }
         if (_cmp(node->key, key)) {
             return succ(node);
         }
-        return node;
+        return strict ? succ(node) : node;
     }
 
+    /**
+     * insert a new node, replacing node with the equal key (if any)
+     * @param node node to insert
+     * @return node being replaced or \a nullptr
+     */
     Node* insert(Node* node) {
         Node* parent = nullptr;
         auto probe = _root;
@@ -91,8 +100,23 @@ public:
                 parent = probe;
                 probe = parent->right();
             }
-            else {
-                return probe;  // TODO: replace?
+            else {  // replace
+                node->parent = parent;
+                if (parent != nullptr) {
+                    if (left_path) {  // NB: assigned if 'parent' non-null
+                        parent->set_left(node);
+                    }
+                    else {
+                        parent->set_right(node);
+                    }
+                }
+                else {
+                    _root = node;
+                }
+                link_left(node, probe->left());
+                link_right(node, probe->right());
+                node->size = probe->size;
+                return probe;
             }
         }
 
@@ -115,7 +139,7 @@ public:
 
         inc_size_path(parent);
 
-        return node;
+        return nullptr;
     }
 
     RemoveReport remove(Node* node) {
@@ -325,15 +349,6 @@ protected:
     static void dec_size_path(Node* node) {
         for (auto ancestor = node; ancestor != nullptr; ancestor = ancestor->parent) {
             --(ancestor->size);
-        }
-    }
-
-private:
-    static void destroy(Node* node) {
-        if (node != nullptr) {
-            destroy(node->left());
-            destroy(node->right());
-            delete node;
         }
     }
 };

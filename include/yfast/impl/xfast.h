@@ -34,6 +34,12 @@ private:
 
 public:
     explicit XFastTrie(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _bx(bx), _cmp(cmp), _root(nullptr, false, false), _leftmost(nullptr), _rightmost(nullptr) {}
+    XFastTrie(const XFastTrie& other) = delete;
+    XFastTrie(XFastTrie&& other) noexcept: _bx(other._bx), _cmp(other._cmp), _root(other._root), _leftmost(other._leftmost), _rightmost(other._rightmost), _hash(std::move(other._hash)) {
+        other._root = Node(nullptr, false, false);
+        other._leftmost = nullptr;
+        other._rightmost = nullptr;
+    }
 
     Leaf* leftmost() const { return _leftmost; }
     Leaf* rightmost() const { return _rightmost; }
@@ -46,7 +52,7 @@ public:
         return nullptr;
     }
 
-    Leaf* pred(const Key& key) const {
+    Leaf* pred(const Key& key, bool strict = false) const {
         auto [guess, missed, level] = approx(key);
         switch (missed) {
             case EMPTY:
@@ -54,13 +60,13 @@ public:
             case MISSED_LEFT:
                 return guess;
             case ON_TARGET:
-                return guess;
+                return strict ? guess->prv : guess;
             case MISSED_RIGHT:
                 return guess->prv;
         }
     }
 
-    Leaf* succ(const Key& key) const {
+    Leaf* succ(const Key& key, bool strict = false) const {
         auto [guess, missed, level] = approx(key);
         switch (missed) {
             case EMPTY:
@@ -68,7 +74,7 @@ public:
             case MISSED_LEFT:
                 return guess->nxt;
             case ON_TARGET:
-                return guess;
+                return strict ? guess->nxt : guess;
             case MISSED_RIGHT:
                 return guess;
         }

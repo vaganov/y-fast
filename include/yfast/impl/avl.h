@@ -29,10 +29,24 @@ public:
 
     [[nodiscard]] unsigned int height() const { return height(_root); }
 
+    /**
+     * insert a new node, replacing node with the equal key (if any)
+     * @param node node to insert
+     * @return node being replaced or \a nullptr
+     */
     Node* insert(Node* node) {
-        auto new_node = this->template BST<Node, Compare>::insert(node);
-        if (new_node != node) {
-            return new_node;
+        auto replaced = this->template BST<Node, Compare>::insert(node);
+        if (replaced != nullptr) {
+            if (replaced->is_left_heavy()) {
+                node->set_left_heavy();
+            }
+            else if (replaced->is_right_heavy()) {
+                node->set_right_heavy();
+            }
+            else {
+                node->set_balanced();
+            }
+            return replaced;
         }
         node->set_balanced();
         for (auto probe = node; probe != nullptr; probe = probe->parent) {
@@ -96,7 +110,7 @@ public:
             }
             break;
         }
-        return node;
+        return nullptr;
     }
 
     Node* remove(Node* node) {

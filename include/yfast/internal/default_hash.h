@@ -1,7 +1,7 @@
 #ifndef _YFAST_INTERNAL_DEFAULT_HASH_H
 #define _YFAST_INTERNAL_DEFAULT_HASH_H
 
-#ifdef WITHOUT_HOPSCOTCH_MAP
+#ifdef YFAST_WITHOUT_HOPSCOTCH_MAP
 #include <unordered_map>
 #else
 #include <tsl/hopscotch_map.h>
@@ -9,7 +9,7 @@
 
 namespace yfast::internal {
 
-#ifdef WITHOUT_HOPSCOTCH_MAP
+#ifdef YFAST_WITHOUT_HOPSCOTCH_MAP
 template <typename Key, typename Value>
 using DefaultHash = std::unordered_map<Key, Value>;
 #else

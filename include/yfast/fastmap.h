@@ -2,8 +2,11 @@
 #define _YFAST_FASTMAP_H
 
 #include <functional>
+#include <initializer_list>
 #include <iterator>
+#include <memory>
 #include <stdexcept>
+#include <utility>
 
 #include <yfast/impl/yfast.h>
 #include <yfast/internal/concepts.h>
@@ -14,9 +17,17 @@
 
 namespace yfast {
 
-template <typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric<Key> BitExtractor = impl::BitExtractor<Key>, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>, typename Compare = std::less<Key>>
+template <
+    typename Key,
+    typename Value,
+    unsigned int H,
+    internal::BitExtractorGeneric<Key> BitExtractor = impl::BitExtractor<Key>,
+    internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
+    typename Compare = std::less<Key>,
+    typename ArbitraryAllocator = std::allocator<Key>
+>
 class fastmap {
-    static_assert(H >= 8, "Key length too short");
+    static_assert(H >= 8, "Key length too short");  // TODO: move to y-fast
 
 public:
     typedef Key key_type;
@@ -27,7 +38,9 @@ public:
 private:
     typedef internal::YFastLeaf<Key, Value> YFastLeaf;
 
-    typedef impl::YFastTrie<YFastLeaf, H, BitExtractor, Compare, Hash> YFastTrie;
+    typedef typename std::allocator_traits<ArbitraryAllocator>::template rebind_alloc<YFastLeaf> Alloc;
+
+    typedef impl::YFastTrie<YFastLeaf, H, BitExtractor, Compare, Hash, ArbitraryAllocator> YFastTrie;
 
     template <bool Const>
     class IteratorBase: private YFastTrie::Where {
@@ -370,13 +383,23 @@ public:
     };
 
 private:
+    Alloc _alloc;
     YFastTrie _trie;
 
 public:
-    explicit fastmap(BitExtractor bx = BitExtractor(), Compare cmp = Compare()): _trie(bx, cmp) {}
+    explicit fastmap(BitExtractor bx = BitExtractor(), Compare cmp = Compare(), ArbitraryAllocator alloc = ArbitraryAllocator()): _alloc(alloc), _trie(bx, cmp, alloc) {}
+    fastmap(std::initializer_list<std::pair<Key, Value>> array, BitExtractor bx = BitExtractor(), Compare cmp = Compare(), ArbitraryAllocator alloc = ArbitraryAllocator()): _alloc(alloc), _trie(bx, cmp, alloc) {
+        for (auto& pair: array) {
+            insert(pair.first, pair.second);
+        }
+    }
+    fastmap(const fastmap& other) = delete;
+    fastmap(fastmap&& other) noexcept = default;
+
+    ~fastmap() { clear(); }
 
     [[nodiscard]] std::size_t size() const { return _trie.size(); }
-    bool empty() const { return _trie.size() == 0; }
+    [[nodiscard]] bool empty() const { return _trie.size() == 0; }
 
     iterator begin() {
         return iterator(_trie.leftmost());
@@ -436,23 +459,23 @@ public:
         return const_iterator(where);
     }
 
-    iterator pred(const Key& key) {
-        auto where = _trie.pred(key);
+    iterator pred(const Key& key, bool strict = false) {
+        auto where = _trie.pred(key, strict);
         return iterator(where);
     }
 
-    const_iterator pred(const Key& key) const {
-        auto where = _trie.pred(key);
+    const_iterator pred(const Key& key, bool strict = false) const {
+        auto where = _trie.pred(key, strict);
         return const_iterator(where);
     }
 
-    iterator succ(const Key& key) {
-        auto where = _trie.succ(key);
+    iterator succ(const Key& key, bool strict = false) {
+        auto where = _trie.succ(key, strict);
         return iterator(where);
     }
 
-    const_iterator succ(const Key& key) const {
-        auto where = _trie.succ(key);
+    const_iterator succ(const Key& key, bool strict = false) const {
+        auto where = _trie.succ(key, strict);
         return const_iterator(where);
     }
 
@@ -460,17 +483,25 @@ public:
         return succ(key);
     }
 
-    const_iterator lower_bound(const Key& key) const{
+    const_iterator lower_bound(const Key& key) const {
         return succ(key);
     }
 
-    // TODO: upper_bound
+    iterator upper_bound(const Key& key) {
+        return succ(key, true);
+    }
+
+    const_iterator upper_bound(const Key& key) const {
+        return succ(key, true);
+    }
 
     typename YFastLeaf::DerefType& operator [] (const Key& key) {
         auto i = find(key);
         if (i == end()) {
-            auto leaf = new YFastLeaf(key);
+            YFastLeaf* leaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+            std::allocator_traits<Alloc>::construct(_alloc, leaf, key);
             auto where = _trie.insert(leaf);
+            where.leaf = leaf;
             i = iterator(where);
         }
         return *i;
@@ -486,29 +517,59 @@ public:
 
     template <typename ... Args>
     iterator insert(const Key& key, Args ... args) {
-        auto leaf = new YFastLeaf(key, args ...);
+        YFastLeaf* leaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
+        std::allocator_traits<Alloc>::construct(_alloc, leaf, key, args ...);
         auto where = _trie.insert(leaf);
-        if (where.leaf != leaf) {
-            delete where.leaf;
-            where.leaf = leaf;
+        if (where.leaf != nullptr) {
+            std::allocator_traits<Alloc>::destroy(_alloc, where.leaf);
+            std::allocator_traits<Alloc>::deallocate(_alloc, where.leaf, 1);
         }
+        where.leaf = leaf;
         return iterator(where);
     }
 
     template <typename Iterator>
     Iterator erase(const Iterator& i) {
+        if (i.trie != &_trie) {
+            throw std::invalid_argument("yfast::fastmap::erase");
+        }
         if (i.leaf == nullptr) {
             return i;
         }
         auto j = i;
         ++j;
         _trie.remove(i.leaf, i.xleaf);
-        delete i.leaf;
+        std::allocator_traits<Alloc>::destroy(_alloc, i.leaf);
+        std::allocator_traits<Alloc>::deallocate(_alloc, i.leaf, 1);
         return j;
     }
 
+    bool erase(const Key& key) {
+        auto i = find(key);
+        if (i == end()) {
+            return false;
+        }
+        _trie.remove(i);
+        return true;
+    }
+
     void clear() {
+        typename YFastTrie::XFastLeaf* xleaf = _trie.leftmost().xleaf;
+        while (xleaf != nullptr) {
+            destroy_subtree(xleaf->value.root());
+            xleaf = xleaf->nxt;
+        }
         _trie.clear();
+    }
+
+private:
+    void destroy_subtree(YFastLeaf* leaf) {
+        if (leaf != nullptr) {
+            destroy_subtree(leaf->left());
+            destroy_subtree(leaf->right());
+            std::allocator_traits<Alloc>::destroy(_alloc, leaf);
+            std::allocator_traits<Alloc>::deallocate(_alloc, leaf, 1);
+        }
     }
 };
 
