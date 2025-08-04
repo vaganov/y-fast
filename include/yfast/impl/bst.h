@@ -51,7 +51,7 @@ public:
         return nullptr;
     }
 
-    Node* pred(const Key& key) const {
+    Node* pred(const Key& key, bool strict = false) const {
         auto node = seek(key);
         if (node == nullptr) {
             return nullptr;
@@ -59,18 +59,24 @@ public:
         if (_cmp(key, node->key)) {
             return pred(node);
         }
-        return node;
+        if (_cmp(node->key, key)) {
+            return node;
+        }
+        return strict ? pred(node) : node;
     }
 
-    Node* succ(const Key& key) const {
+    Node* succ(const Key& key, bool strict = false) const {
         auto node = seek(key);
         if (node == nullptr) {
             return nullptr;
         }
+        if (_cmp(key, node->key)) {
+            return node;
+        }
         if (_cmp(node->key, key)) {
             return succ(node);
         }
-        return node;
+        return strict ? succ(node) : node;
     }
 
     /**

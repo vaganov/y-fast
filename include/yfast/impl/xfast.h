@@ -52,7 +52,7 @@ public:
         return nullptr;
     }
 
-    Leaf* pred(const Key& key) const {
+    Leaf* pred(const Key& key, bool strict = false) const {
         auto [guess, missed, level] = approx(key);
         switch (missed) {
             case EMPTY:
@@ -60,13 +60,13 @@ public:
             case MISSED_LEFT:
                 return guess;
             case ON_TARGET:
-                return guess;
+                return strict ? guess->prv : guess;
             case MISSED_RIGHT:
                 return guess->prv;
         }
     }
 
-    Leaf* succ(const Key& key) const {
+    Leaf* succ(const Key& key, bool strict = false) const {
         auto [guess, missed, level] = approx(key);
         switch (missed) {
             case EMPTY:
@@ -74,7 +74,7 @@ public:
             case MISSED_LEFT:
                 return guess->nxt;
             case ON_TARGET:
-                return guess;
+                return strict ? guess->nxt : guess;
             case MISSED_RIGHT:
                 return guess;
         }

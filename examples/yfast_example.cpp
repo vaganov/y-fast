@@ -10,11 +10,7 @@
 #include <yfast/iterator.h>
 
 int main() {
-    yfast::fastmap<std::uint32_t, std::string, 32> fastmap;
-
-    fastmap[3] = "three";
-    fastmap[2] = "two";
-    fastmap[1] = "one";
+    yfast::fastmap<std::uint32_t, std::string, 32> fastmap { {1, "one"}, {2, "two"}, {3, "three"} };
 
     std::cout << "values: ";
     for (const auto& v: fastmap) {
