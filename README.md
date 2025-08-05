@@ -6,19 +6,15 @@ based upon [Y-fast trie](https://en.wikipedia.org/wiki/Y-fast_trie)
 Asymptotically all the basic operations (find exact match, find predecessor/successor, insert/delete) in the y-fast trie
 data structure take amortized `O(ln H)` time (assuming `H` is the bit length of key). The main goal of this library is
 to provide a faster container than classic sorted associative containers (represented in benchmark tests by `std::map`)
-in practice. This, however, may only be achieved under certain conditions (see [Performance](#performance)).
+in practice. This, however, may only be achieved under certain conditions. Namely, to profit from using
+`yfast::fastmap`, one:
+- **must** operate a large size container (over one million entries for faster lookups and over ten million entries for
+faster inserts)
+- **must** _either_ index the container with an integral type _or_ provide an effective bit extraction mechanism
+- **should** run on _ARM64_ architecture (especially if faster inserts are desired)
+- **should** use custom hash table implementation
 
-## Current state
-The library is in pre-release mode; basic operations are supported:
-- insert an entry
-- find an entry by key if present
-- remove an entry
-- operator []
-- iteration
-
-Yet to come:
-- proper documentation
-- test coverage
+See [Performance](#performance) for details and benchmark test results
 
 ## Usage
 ### Template parameters
@@ -40,15 +36,15 @@ Yet to come:
   - `std::string` (which is basically treated as `std::vector<std::byte>`)
 - `Hash` &mdash; map from shifted keys to `std::uintptr_t`; must be compliant with
 [yfast::internal::MapGeneric](include/yfast/internal/concepts.h) concept and _default-constructible_;
-[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) is set as default (unless `YFAST_WITHOUT_HOPSCOTCH_MAP`
+[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) is used as default (unless `YFAST_WITHOUT_HOPSCOTCH_MAP`
 macro is defined, in which case `std::unordered_map` is used)
 - `Compare` &mdash; key comparator; must be _copyable_; the order provided by `Compare` must match the lexicographic
-order provided by `BitExtractor`; `std::less` is set as a default
+order provided by `BitExtractor`; `std::less` is used as default
 - `ArbitraryAllocator` &mdash; allocator; this allocator will not be used directly but rather rebound via
 [std::allocator_traits::rebind_alloc](https://en.cppreference.com/w/cpp/memory/allocator_traits.html) (hence the
 parameter name). `std::allocator<Key>` is used as default
 
-### Usage example
+### Basic usage example
 
     #include <cassert>
     #include <cstdint>
@@ -92,8 +88,48 @@ parameter name). `std::allocator<Key>` is used as default
         return EXIT_SUCCESS;
     }
 
+### Iterators
+`yfast::fastmap` is equipped with mutable and const bidirectional iterators, both forward and reverse. Apart from
+`rbegin`/`rend`/`crbegin`/`crend`, `yfast::fastmap` methods return forward iterators (const for const methods and
+mutable otherwise). A reverse iterator may be obtained from a forward iterator by calling `make_reverse()` method or
+`yfast::make_reverse_iterator()` template function.
+
+#### iterator::value_type
+Please note that `iterator::value_type` is `Value`, not `std::pair<Key, Value>`. Entry value is available via `*i` and
+`i->`, as well as `i.value()`; (immutable) entry key is available via `i.key()`
+
+`Value = void` is considered a special case, effectively turning `yfast::fastmap` into a "fastset". In this case
+`iterator::value_type` becomes `const Key`
+
+#### Iterator increment/decrement safety
+- incrementing/decrementing an iterator which is neither `begin()` nor `end()`: always safe
+- incrementing `begin()`: safe
+- decrementing `begin()`: **undefined behaviour**
+- incrementing `end()`: safe, no-op
+- decrementing `end()`: safe (unless empty), points to the rightmost entry (with respect to the iterator direction)
+
+#### Iterator reversion
+- reverting an iterator `i` which is neither `begin()` nor `end()` gives a reverse iterator pointing to the same entry
+as `--i`
+- reverting `begin()` gives `rend()`
+- reverting `end()` gives `rbegin()`
+
+#### Iterator invalidation
+Iterator **only** gets invalidated if:
+- pointed entry is replaced via calling `insert()` with the equal key
+- pointed entry is erased via `erase()`
+- _in particular,_ all entries are erased by `clear()`
+- _in particular,_ the container is destroyed
+- the container is moved (in which case iterator still may be dereferenced but not incremented/decremented)
+
+Iterator **does not** get invalidated and may be safely dereferenced and incremented/decremented if:
+- other iterators pointing at the same entry are created
+- the value of the pointed entry is modified
+- new entries are inserted
+- other entries are erased
+
 ## Performance
-Every y-fast trie lookup operation (find match/predecessor/successor) performs `ln H` key shifts and `ln H` hash
+Every y-fast trie lookup operation (find match/predecessor/successor) performs `O(ln H)` key shifts and `O(ln H)` hash
 lookups. Besides, insert/delete operations may perform up to `H` key bit extractions and up to `H` hash
 insertions/deletions respectively. This said, to outperform `std::map`, these factors shall be taken into account:
 
@@ -173,3 +209,9 @@ the y-axis
 <source media="(prefers-color-scheme: dark)" srcset="plots/benchmark-uint32-x64-erase-dark.png">
 <img alt="uint32-x64-erase" src="plots/benchmark-uint32-x64-erase.png">
 </picture>
+
+Based on benchmark tests, [tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) has been picked as default
+
+## Memory consumption
+While maintaining linear memory use, `yfast::fastmap` consumes around 30% more RAM than `std::map` due to use of `H`
+hash tables.
