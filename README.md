@@ -94,19 +94,23 @@ parameter name). `std::allocator<Key>` is used as default
 mutable otherwise). A reverse iterator may be obtained from a forward iterator by calling `make_reverse()` method or
 `yfast::make_reverse_iterator()` template function.
 
-#### iterator::value_type
+#### Iterator dereference
 Please note that `iterator::value_type` is `Value`, not `std::pair<Key, Value>`. Entry value is available via `*i` and
 `i->`, as well as `i.value()`; (immutable) entry key is available via `i.key()`
 
-`Value = void` is considered a special case, effectively turning `yfast::fastmap` into a "fastset". In this case
+`Value = void` is considered a special case, effectively turning `yfast::fastmap` into a "fastset." In this case
 `iterator::value_type` becomes `const Key`
+
+- dereferencing a valid iterator which is not `end()`: returns `iterator::value_type` by (mutable or const) reference
+- dereferencing `end()`: throws `std::out_of_range`
+- dereferencing an invalidated iterator: **undefined behavior**
 
 #### Iterator increment/decrement safety
 - incrementing/decrementing an iterator which is neither `begin()` nor `end()`: always safe
 - incrementing `begin()`: safe
-- decrementing `begin()`: **undefined behaviour**
+- decrementing `begin()`: **undefined behavior**
 - incrementing `end()`: safe, no-op
-- decrementing `end()`: safe (unless empty), points to the rightmost entry (with respect to the iterator direction)
+- decrementing `end()`: safe (unless empty), points to the last entry (with respect to the iterator direction)
 
 #### Iterator reversion
 - reverting an iterator `i` which is neither `begin()` nor `end()` gives a reverse iterator pointing to the same entry
