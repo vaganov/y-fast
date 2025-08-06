@@ -1,23 +1,28 @@
 #ifndef _YFAST_IMPL_YFAST_H
 #define _YFAST_IMPL_YFAST_H
 
+#include <functional>
 #include <memory>
 
 #include <yfast/internal/concepts.h>
 #include <yfast/impl/avl.h>
+#include <yfast/impl/bit_extractor.h>
 #include <yfast/internal/yfast.h>
+#include <yfast/internal/default_hash.h>
 
 namespace yfast::impl {
 
 template <
     typename Leaf,
     unsigned int H,
-    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor,
-    typename Compare,
-    internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash,
-    typename ArbitraryAllocator
+    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor = BitExtractor<typename Leaf::Key>,
+    internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
+    typename Compare = std::less<typename Leaf::Key>,
+    typename ArbitraryAllocator = std::allocator<typename Leaf::Key>
 >
 class YFastTrie {
+    static_assert(H >= 8, "Key length too short");
+
 public:
     typedef typename Leaf::Key Key;
     typedef AVL<Leaf, Compare> Value;
@@ -41,7 +46,7 @@ public:
 private:
     Alloc _alloc;
     Compare _cmp;
-    XFastTrie<XFastLeaf, H, BitExtractor, Compare, Hash> _trie;
+    XFastTrie<XFastLeaf, H, BitExtractor, Hash, Compare> _trie;
     unsigned int _rebuilds;
     std::size_t _size;
 

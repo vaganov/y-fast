@@ -27,8 +27,6 @@ template <
     typename ArbitraryAllocator = std::allocator<Key>
 >
 class fastmap {
-    static_assert(H >= 8, "Key length too short");  // TODO: move to y-fast
-
 public:
     typedef Key key_type;
     typedef Value value_type;
@@ -40,7 +38,7 @@ private:
 
     typedef typename std::allocator_traits<ArbitraryAllocator>::template rebind_alloc<YFastLeaf> Alloc;
 
-    typedef impl::YFastTrie<YFastLeaf, H, BitExtractor, Compare, Hash, ArbitraryAllocator> YFastTrie;
+    typedef impl::YFastTrie<YFastLeaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator> YFastTrie;
 
     template <bool Const>
     class IteratorBase: private YFastTrie::Where {
@@ -398,7 +396,14 @@ public:
 
     ~fastmap() { clear(); }
 
+    /**
+     * @return the number of entries in the container
+     */
     [[nodiscard]] std::size_t size() const { return _trie.size(); }
+
+    /**
+     * @return \a true if the container is empty otherwise \a false
+     */
     [[nodiscard]] bool empty() const { return _trie.size() == 0; }
 
     iterator begin() {
@@ -449,31 +454,65 @@ public:
         return const_reverse_iterator(_trie.nowhere);
     }
 
+    /**
+     * find an entry by key
+     * @param key key to find
+     * @return iterator pointing to the entry with the key equal to \a key if any or \a end() otherwise
+     */
     iterator find(const Key& key) {
         auto where = _trie.find(key);
         return iterator(where);
     }
 
+    /**
+     * find an entry by key
+     * @param key key to find
+     * @return const iterator pointing to the entry with the key equal to \a key if any or \a end() otherwise
+     */
     const_iterator find(const Key& key) const {
         auto where = _trie.find(key);
         return const_iterator(where);
     }
 
+    /**
+     * find a predecessor entry for a key
+     * @param key key
+     * @param strict whether an entry with the key strictly less than \a key should be returned
+     * @return iterator pointing to the entry with the key either not greater or strictly less than \a key
+     */
     iterator pred(const Key& key, bool strict = false) {
         auto where = _trie.pred(key, strict);
         return iterator(where);
     }
 
+    /**
+     * find a predecessor entry for a key
+     * @param key key
+     * @param strict whether an entry with the key strictly less than \a key should be returned
+     * @return const iterator pointing to the entry with the key either not greater or strictly less than \a key
+     */
     const_iterator pred(const Key& key, bool strict = false) const {
         auto where = _trie.pred(key, strict);
         return const_iterator(where);
     }
 
+    /**
+     * find a successor entry for a key
+     * @param key key
+     * @param strict whether an entry with the key strictly greater than \a key should be returned
+     * @return iterator pointing to the entry with the key either not less or strictly greater than \a key
+     */
     iterator succ(const Key& key, bool strict = false) {
         auto where = _trie.succ(key, strict);
         return iterator(where);
     }
 
+    /**
+     * find a successor entry for a key
+     * @param key key
+     * @param strict whether an entry with the key strictly greater than \a key should be returned
+     * @return const iterator pointing to the entry with the key either not less or strictly greater than \a key
+     */
     const_iterator succ(const Key& key, bool strict = false) const {
         auto where = _trie.succ(key, strict);
         return const_iterator(where);
@@ -495,6 +534,11 @@ public:
         return succ(key, true);
     }
 
+    /**
+     * get value by key
+     * @param key key
+     * @return reference to the value indexed by \a key; if not present, a default-constructed value is inserted
+     */
     typename YFastLeaf::DerefType& operator [] (const Key& key) {
         auto i = find(key);
         if (i == end()) {
@@ -507,6 +551,11 @@ public:
         return *i;
     }
 
+    /**
+     * get value by key
+     * @param key key
+     * @return const reference to the value indexed by \a key; if not present, \a std::out_of_range is thrown
+     */
     const typename YFastLeaf::DerefType& at(const Key& key) const {
         auto i = find(key);
         if (i == end()) {
@@ -515,6 +564,12 @@ public:
         return *i;
     }
 
+    /**
+     * insert an entry, possibly replacing the existing one
+     * @param key key to insert
+     * @param args const reference or move-reference to the value to insert
+     * @return iterator pointing to the inserted entry
+     */
     template <typename ... Args>
     iterator insert(const Key& key, Args ... args) {
         YFastLeaf* leaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
@@ -528,6 +583,11 @@ public:
         return iterator(where);
     }
 
+    /**
+     * erase entry by iterator
+     * @param i iterator (may be a const iterator and/or a reverse iterator)
+     * @return iterator following the removed entry with respect to the iterator direction
+     */
     template <typename Iterator>
     Iterator erase(const Iterator& i) {
         if (i.trie != &_trie) {
@@ -544,6 +604,11 @@ public:
         return j;
     }
 
+    /**
+     * find and erase entry by key
+     * @param key key to find and erase
+     * @return \a true if the entry has been found and erased or \a false otherwise
+     */
     bool erase(const Key& key) {
         auto i = find(key);
         if (i == end()) {
@@ -553,6 +618,9 @@ public:
         return true;
     }
 
+    /**
+     * erase all entries
+     */
     void clear() {
         typename YFastTrie::XFastLeaf* xleaf = _trie.leftmost().xleaf;
         while (xleaf != nullptr) {

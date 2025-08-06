@@ -2,13 +2,22 @@
 #define _YFAST_IMPL_XFAST_H
 
 #include <cstdint>
+#include <functional>
 
+#include <yfast/impl/bit_extractor.h>
 #include <yfast/internal/concepts.h>
+#include <yfast/internal/default_hash.h>
 #include <yfast/internal/xfast.h>
 
 namespace yfast::impl {
 
-template <typename Leaf, unsigned int H, internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor, typename Compare, internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash>
+template <
+    typename Leaf,
+    unsigned int H,
+    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor = BitExtractor<typename Leaf::Key>,
+    internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
+    typename Compare = std::less<typename Leaf::Key>
+>
 class XFastTrie {
 public:
     typedef typename Leaf::Key Key;
