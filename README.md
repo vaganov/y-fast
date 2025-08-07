@@ -134,6 +134,9 @@ Iterator **does not** get invalidated and may be safely dereferenced and increme
 - new entries are inserted
 - other entries are erased
 
+### Auto-generated docs
+See [yfast::fastmap](https://vaganov.github.io/y-fast/html/classyfast_1_1fastmap.html) class summary
+
 ## Performance
 Every y-fast trie lookup operation (find match/predecessor/successor) performs `O(ln H)` key shifts and `O(ln H)` hash
 lookups. Besides, insert/delete operations may perform up to `H` key bit extractions and up to `H` hash
