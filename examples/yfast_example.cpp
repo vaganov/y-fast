@@ -12,6 +12,8 @@
 int main() {
     yfast::fastmap<std::uint32_t, std::string, 32> fastmap { {1, "one"}, {2, "two"}, {3, "three"} };
 
+    fastmap[4] = "four";
+
     std::cout << "values: ";
     for (const auto& v: fastmap) {
         std::cout << v << ' ';
@@ -20,7 +22,7 @@ int main() {
 
     assert(fastmap.size() == std::distance(fastmap.begin(), fastmap.end()));
 
-    auto i = fastmap.find(2);
+    auto i = fastmap.find(3);
     auto r = yfast::make_reverse_iterator(i);
 
     std::cout << "erasing onward" << std::endl;

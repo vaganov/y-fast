@@ -59,6 +59,8 @@ parameter name). `std::allocator<Key>` is used as default
     
     int main() {
         yfast::fastmap<std::uint32_t, std::string, 32> fastmap { {1, "one"}, {2, "two"}, {3, "three"} };
+
+        fastmap[4] = "four";
     
         std::cout << "values: ";
         for (const auto& v: fastmap) {
@@ -68,7 +70,7 @@ parameter name). `std::allocator<Key>` is used as default
     
         assert(fastmap.size() == std::distance(fastmap.begin(), fastmap.end()));
     
-        auto i = fastmap.find(2);
+        auto i = fastmap.find(3);
         auto r = yfast::make_reverse_iterator(i);
     
         std::cout << "erasing onward" << std::endl;
