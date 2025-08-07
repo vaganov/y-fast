@@ -17,6 +17,16 @@
 
 namespace yfast {
 
+/**
+ * sorted associative container
+ * @tparam Key key type
+ * @tparam Value value type
+ * @tparam H key length in bits
+ * @tparam BitExtractor helper type to provide key shifts and bit extractions
+ * @tparam Hash map from shifted keys to \a std::uintptr_t
+ * @tparam Compare key comparator
+ * @tparam ArbitraryAllocator allocator
+ */
 template <
     typename Key,
     typename Value,
@@ -28,9 +38,19 @@ template <
 >
 class fastmap {
 public:
+    /**
+     * key type
+     */
     typedef Key key_type;
+
+    /**
+     * value type
+     */
     typedef Value value_type;
 
+    /**
+     * key length in bits
+     */
     static constexpr unsigned int KeyLength = H;
 
 private:
@@ -226,6 +246,9 @@ public:
     class reverse_iterator;
     class const_reverse_iterator;
 
+    /**
+     * mutable bidirectional forward iterator
+     */
     class iterator: public ForwardIteratorBase<false> {
         friend class fastmap;
 
@@ -260,6 +283,10 @@ public:
             return i;
         }
 
+        /**
+         * reverse iterator
+         * @return reverse iterator pointing to the same entry as \a --i (or \a rend() if \a i == \a begin())
+         */
         reverse_iterator make_reverse() const {
             auto i = *this;
             const typename YFastTrie::Where& where = --i;
@@ -267,6 +294,9 @@ public:
         }
     };
 
+    /**
+     * const bidirectional forward iterator
+     */
     class const_iterator: public ForwardIteratorBase<true> {
         friend class fastmap;
 
@@ -302,6 +332,10 @@ public:
             return i;
         }
 
+        /**
+         * reverse iterator
+         * @return const reverse iterator pointing to the same entry as \a --i (or \a crend() if \a i == \a cbegin())
+         */
         const_reverse_iterator make_reverse() const {
             auto i = *this;
             const typename YFastTrie::Where& where = --i;
@@ -309,6 +343,9 @@ public:
         }
     };
 
+    /**
+     * mutable bidirectional reverse iterator
+     */
     class reverse_iterator: public ReverseIteratorBase<false> {
         friend class fastmap;
 
@@ -344,6 +381,9 @@ public:
         }
     };
 
+    /**
+     * const bidirectional reverse iterator
+     */
     class const_reverse_iterator: public ReverseIteratorBase<true> {
         friend class fastmap;
 
@@ -406,50 +446,86 @@ public:
      */
     [[nodiscard]] bool empty() const { return _trie.size() == 0; }
 
+    /**
+     * @return mutable forward iterator pointing at the leftmost entry
+     */
     iterator begin() {
         return iterator(_trie.leftmost());
     }
 
+    /**
+     * @return mutable forward iterator right after the rightmost entry
+     */
     iterator end() {
         return iterator(_trie.nowhere);
     }
 
+    /**
+     * @return const forward iterator pointing at the leftmost entry
+     */
     const_iterator begin() const {
         return const_iterator(_trie.leftmost());
     }
 
+    /**
+     * @return const forward iterator right after the rightmost entry
+     */
     const_iterator end() const {
         return const_iterator(_trie.nowhere);
     }
 
+    /**
+     * @return const forward iterator pointing at the leftmost entry
+     */
     const_iterator cbegin() const {
         return const_iterator(_trie.leftmost());
     }
 
+    /**
+     * @return const forward iterator right after the rightmost entry
+     */
     const_iterator cend() const {
         return const_iterator(_trie.nowhere);
     }
 
+    /**
+     * @return mutable reverse iterator pointing at the rightmost entry
+     */
     reverse_iterator rbegin() {
         return reverse_iterator(_trie.rightmost());
     }
 
+    /**
+     * @return mutable reverse iterator right after the leftmost entry
+     */
     reverse_iterator rend() {
         return reverse_iterator(_trie.nowhere);
     }
 
+    /**
+     * @return const reverse iterator pointing at the rightmost entry
+     */
     const_reverse_iterator rbegin() const {
         return const_reverse_iterator(_trie.rightmost());
     }
 
+    /**
+     * @return const reverse iterator right after the leftmost entry
+     */
     const_reverse_iterator rend() const {
         return const_reverse_iterator(_trie.nowhere);
     }
 
+    /**
+     * @return const reverse iterator pointing at the rightmost entry
+     */
     const_reverse_iterator crbegin() const {
         return const_reverse_iterator(_trie.rightmost());
     }
 
+    /**
+     * @return const reverse iterator right after the leftmost entry
+     */
     const_reverse_iterator crend() const {
         return const_reverse_iterator(_trie.nowhere);
     }
@@ -518,18 +594,38 @@ public:
         return const_iterator(where);
     }
 
+    /**
+     * find a successor entry for a key
+     * @param key key
+     * @return iterator pointing to the entry with the key not less than \a key
+     */
     iterator lower_bound(const Key& key) {
         return succ(key);
     }
 
+    /**
+     * find a successor entry for a key
+     * @param key key
+     * @return const iterator pointing to the entry with the key not less than \a key
+     */
     const_iterator lower_bound(const Key& key) const {
         return succ(key);
     }
 
+    /**
+     * find a successor entry for a key
+     * @param key key
+     * @return iterator pointing to the entry with the key strictly greater than \a key
+     */
     iterator upper_bound(const Key& key) {
         return succ(key, true);
     }
 
+    /**
+     * find a successor entry for a key
+     * @param key key
+     * @return const iterator pointing to the entry with the key strictly greater than \a key
+     */
     const_iterator upper_bound(const Key& key) const {
         return succ(key, true);
     }
@@ -539,7 +635,7 @@ public:
      * @param key key
      * @return reference to the value indexed by \a key; if not present, a default-constructed value is inserted
      */
-    typename YFastLeaf::DerefType& operator [] (const Key& key) {
+    typename iterator::value_type& operator [] (const Key& key) {
         auto i = find(key);
         if (i == end()) {
             YFastLeaf* leaf = std::allocator_traits<Alloc>::allocate(_alloc, 1);
@@ -556,7 +652,7 @@ public:
      * @param key key
      * @return const reference to the value indexed by \a key; if not present, \a std::out_of_range is thrown
      */
-    const typename YFastLeaf::DerefType& at(const Key& key) const {
+    typename const_iterator::value_type& at(const Key& key) const {
         auto i = find(key);
         if (i == end()) {
             throw std::out_of_range("yfast::fastmap::at");
