@@ -30,7 +30,7 @@ See [Performance](#performance) for details and benchmark test results
 - `BitExtractor` &mdash; helper type to provide key shifts and bit extractions; must be compliant with
 [yfast::internal::BitExtractorGeneric](include/yfast/internal/concepts.h) concept; whatever type is returned by
 `shift()` must be hashable (see `Hash`); `yfast::fastmap` comes with a default implementation
-`yfast::impl::BitExtractor` for these types:
+`yfast::internal::BitExtractor` for these types:
   - all integral types
   - `std::vector<std::byte>`
   - `std::string` (which is basically treated as `std::vector<std::byte>`)
