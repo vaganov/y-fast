@@ -4,18 +4,27 @@
 #include <functional>
 #include <memory>
 
-#include <yfast/internal/concepts.h>
 #include <yfast/impl/avl.h>
-#include <yfast/impl/bit_extractor.h>
+#include <yfast/internal/concepts.h>
+#include <yfast/internal/bit_extractor.h>
 #include <yfast/internal/yfast.h>
 #include <yfast/internal/default_hash.h>
 
 namespace yfast::impl {
 
+/**
+ * <a href="https://en.wikipedia.org/wiki/Y-fast_trie">y-fast trie</a> implementation
+ * @tparam Leaf inner binary tree leaf type
+ * @tparam H key length in bits
+ * @tparam BitExtractor helper type to provide key shifts and bit extractions
+ * @tparam Hash map from shifted keys to \a std::uintptr_t
+ * @tparam Compare key comparator
+ * @tparam ArbitraryAllocator allocator
+ */
 template <
     typename Leaf,
     unsigned int H,
-    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor = BitExtractor<typename Leaf::Key>,
+    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor = internal::BitExtractor<typename Leaf::Key>,
     internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
     typename Compare = std::less<typename Leaf::Key>,
     typename ArbitraryAllocator = std::allocator<typename Leaf::Key>
@@ -155,7 +164,7 @@ public:
     /**
      * insert a new leaf
      * @param leaf leaf to insert
-     * @return Where with fields: trie -- this; xleaf -- new leaf's x-fast trie node; leaf -- NB: replaced leaf (if any)
+     * @return Where with fields: trie -- \a this; xleaf -- new leaf's x-fast trie node; leaf -- NB: replaced leaf (if any)
      */
     Where insert(Leaf* leaf) {
         auto pred = _trie.pred(leaf->key);

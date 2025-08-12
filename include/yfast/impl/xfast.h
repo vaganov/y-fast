@@ -4,17 +4,25 @@
 #include <cstdint>
 #include <functional>
 
-#include <yfast/impl/bit_extractor.h>
+#include <yfast/internal/bit_extractor.h>
 #include <yfast/internal/concepts.h>
 #include <yfast/internal/default_hash.h>
 #include <yfast/internal/xfast.h>
 
 namespace yfast::impl {
 
+/**
+ * <a href="https://en.wikipedia.org/wiki/X-fast_trie">x-fast trie</a> implementation
+ * @tparam Leaf lower level leaf type
+ * @tparam H key length in bits
+ * @tparam BitExtractor helper type to provide key shifts and bit extractions
+ * @tparam Hash map from shifted keys to \a std::uintptr_t
+ * @tparam Compare key comparator
+ */
 template <
     typename Leaf,
     unsigned int H,
-    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor = BitExtractor<typename Leaf::Key>,
+    internal::BitExtractorGeneric<typename Leaf::Key> BitExtractor = internal::BitExtractor<typename Leaf::Key>,
     internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
     typename Compare = std::less<typename Leaf::Key>
 >

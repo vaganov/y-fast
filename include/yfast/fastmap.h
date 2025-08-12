@@ -12,7 +12,7 @@
 #include <yfast/internal/concepts.h>
 #include <yfast/internal/default_hash.h>
 #include <yfast/internal/fastmap.h>
-#include <yfast/impl/bit_extractor.h>
+#include <yfast/internal/bit_extractor.h>
 #include <yfast/utils/maybe_const.h>
 
 namespace yfast {
@@ -31,10 +31,10 @@ template <
     typename Key,
     typename Value,
     unsigned int H,
-    internal::BitExtractorGeneric<Key> BitExtractor = impl::BitExtractor<Key>,
+    internal::BitExtractorGeneric<Key> BitExtractor = internal::BitExtractor<Key>,
     internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
     typename Compare = std::less<Key>,
-    typename ArbitraryAllocator = std::allocator<Key>
+    typename ArbitraryAllocator = std::allocator<std::pair<Key, Value>>
 >
 class fastmap {
 public:

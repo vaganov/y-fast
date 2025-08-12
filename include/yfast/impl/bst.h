@@ -5,6 +5,11 @@
 
 namespace yfast::impl {
 
+/**
+ * <a href="https://en.wikipedia.org/wiki/Binary_search_tree">Binary search tree</a> implementation
+ * @tparam Node node type
+ * @tparam Compare key comparator
+ */
 template <typename Node, typename Compare = std::less<typename Node::Key>>
 class BST {
 public:

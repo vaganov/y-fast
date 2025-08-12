@@ -1,7 +1,7 @@
 #ifndef _YFAST_INTERNAL_XFAST_H
 #define _YFAST_INTERNAL_XFAST_H
 
-#include <yfast/internal/aligned.h>
+#include <yfast/utils/aligned.h>
 
 namespace yfast::internal {
 
@@ -15,12 +15,12 @@ struct XFastLeafBase {
 };
 
 template <typename Leaf>
-struct XFastNode: private aligned_ptr<2, Leaf> {
-    using aligned_ptr<2, Leaf>::value;
+struct XFastNode: private utils::aligned_ptr<2, Leaf> {
+    using utils::aligned_ptr<2, Leaf>::value;
 
-    XFastNode(): aligned_ptr<2, Leaf>() {}
-    XFastNode(std::uintptr_t value): aligned_ptr<2, Leaf>(value) {}
-    XFastNode(Leaf* leaf, bool left_present, bool right_present): aligned_ptr<2, Leaf>(leaf, left_present, right_present) {}
+    XFastNode(): utils::aligned_ptr<2, Leaf>() {}
+    XFastNode(std::uintptr_t value): utils::aligned_ptr<2, Leaf>(value) {}
+    XFastNode(Leaf* leaf, bool left_present, bool right_present): utils::aligned_ptr<2, Leaf>(leaf, left_present, right_present) {}
 
     Leaf* descendant() const { return this->get_ptr(); };
     [[nodiscard]] bool left_present() const { return this->get_bit(0); };

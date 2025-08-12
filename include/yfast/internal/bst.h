@@ -3,14 +3,14 @@
 
 #include <cstddef>
 
-#include <yfast/internal/aligned.h>
+#include <yfast/utils/aligned.h>
 
 namespace yfast::internal {
 
 template <typename _Key, typename T>
 struct BSTNodeBase {
     typedef _Key Key;
-    typedef aligned_ptr<1, T> Child;
+    typedef utils::aligned_ptr<1, T> Child;
 
     const Key key;
     T* parent;
