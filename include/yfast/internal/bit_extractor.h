@@ -1,5 +1,5 @@
-#ifndef _YFAST_IMPL_BIT_EXTRACTOR_H
-#define _YFAST_IMPL_BIT_EXTRACTOR_H
+#ifndef _YFAST_INTERNAL_BIT_EXTRACTOR_H
+#define _YFAST_INTERNAL_BIT_EXTRACTOR_H
 
 #include <cstddef>
 #include <string>
@@ -8,7 +8,7 @@
 
 #include <yfast/internal/hash.h>
 
-namespace yfast::impl {
+namespace yfast::internal {
 
 template <typename Key, typename = void>
 class BitExtractor;

@@ -30,19 +30,20 @@ See [Performance](#performance) for details and benchmark test results
 - `BitExtractor` &mdash; helper type to provide key shifts and bit extractions; must be compliant with
 [yfast::internal::BitExtractorGeneric](include/yfast/internal/concepts.h) concept; whatever type is returned by
 `shift()` must be hashable (see `Hash`); `yfast::fastmap` comes with a default implementation
-`yfast::impl::BitExtractor` for these types:
+`yfast::internal::BitExtractor` for these types:
   - all integral types
   - `std::vector<std::byte>`
   - `std::string` (which is basically treated as `std::vector<std::byte>`)
 - `Hash` &mdash; map from shifted keys to `std::uintptr_t`; must be compliant with
 [yfast::internal::MapGeneric](include/yfast/internal/concepts.h) concept and _default-constructible_;
-[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) is used as default (unless `YFAST_WITHOUT_HOPSCOTCH_MAP`
-macro is defined, in which case `std::unordered_map` is used)
+[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) _with default allocator_ is used as default (unless
+`YFAST_WITHOUT_HOPSCOTCH_MAP` macro is defined, in which case `std::unordered_map` _with default allocator_ is used)
 - `Compare` &mdash; key comparator; must be _copyable_; the order provided by `Compare` must match the lexicographic
 order provided by `BitExtractor`; `std::less` is used as default
 - `ArbitraryAllocator` &mdash; allocator; this allocator will not be used directly but rather rebound via
-[std::allocator_traits::rebind_alloc](https://en.cppreference.com/w/cpp/memory/allocator_traits.html) (hence the
-parameter name). `std::allocator<Key>` is used as default
+[std::allocator_traits::rebind_alloc](https://en.cppreference.com/w/cpp/memory/allocator_traits.html) to allocate
+internal structures; `Hash`, however, only uses _any_ allocator if explicitly specified;
+`std::allocator<std::pair<Key, Value>>` is used as default
 
 ### Basic usage example
 
@@ -60,7 +61,7 @@ parameter name). `std::allocator<Key>` is used as default
     int main() {
         yfast::fastmap<std::uint32_t, std::string, 32> fastmap { {1, "one"}, {2, "two"}, {3, "three"} };
 
-        fastmap[4] = "four";
+        fastmap[0] = "zero";
     
         std::cout << "values: ";
         for (const auto& v: fastmap) {
@@ -70,7 +71,7 @@ parameter name). `std::allocator<Key>` is used as default
     
         assert(fastmap.size() == std::distance(fastmap.begin(), fastmap.end()));
     
-        auto i = fastmap.find(3);
+        auto i = fastmap.find(2);
         auto r = yfast::make_reverse_iterator(i);
     
         std::cout << "erasing onward" << std::endl;
@@ -224,3 +225,19 @@ Based on benchmark tests, [tsl::hopscotch_map](https://github.com/Tessil/hopscot
 ## Memory consumption
 While maintaining linear memory use, `yfast::fastmap` consumes around 30% more RAM than `std::map` due to use of `H`
 hash tables.
+
+## Underlying data structures
+While `yfast::fastmap` is merely a wrapper (mostly iterator paperwork), these classes implement underlying data
+structures:
+- `yfast::impl::BST` &mdash; [Binary search tree](https://en.wikipedia.org/wiki/Binary_search_tree)
+- `yfast::impl::AVL` &mdash; [AVL tree](https://en.wikipedia.org/wiki/AVL_tree) on top of `yfast::impl::BST`
+- `yfast::impl::XFastTrie` &mdash; [X-fast trie](https://en.wikipedia.org/wiki/X-fast_trie)
+- `yfast::impl::YFastTrie` &mdash; [Y-fast trie](https://en.wikipedia.org/wiki/Y-fast_trie) on top of
+`yfast::impl::XFastTrie` and `yfast::impl::AVL`
+
+Why bother implementing self-balancing binary trees: neither
+[std::map](https://en.cppreference.com/w/cpp/container/map.html) nor
+[boost::intrusive::avltree](https://www.boost.org/doc/libs/latest/doc/html/intrusive/avl_set_multiset.html) nor other
+self-balancing tree implementations provide a way to split a tree into two subtrees of comparable size in linear (in
+size) time or better, which is crucial for inserting an entry into a y-fast trie. `yfast::impl::AVL` comes with
+`split()` method to split a tree by root in logarithmic (in size) time.

@@ -1,9 +1,9 @@
-#ifndef _YFAST_INTERNAL_ALIGNED_H
-#define _YFAST_INTERNAL_ALIGNED_H
+#ifndef _YFAST_UTILS_ALIGNED_H
+#define _YFAST_UTILS_ALIGNED_H
 
 #include <cstdint>
 
-namespace yfast::internal {
+namespace yfast::utils {
 
 template <typename T>
 struct align_traits;

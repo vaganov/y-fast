@@ -99,7 +99,7 @@ int main() {
 
     map.clear();
 
-    yfast::fastmap<std::uint32_t, void, N1, yfast::impl::BitExtractor<std::uint32_t>, std::unordered_map<std::uint32_t, std::uintptr_t>> fastmap;
+    yfast::fastmap<std::uint32_t, void, N1, yfast::internal::BitExtractor<std::uint32_t>, std::unordered_map<std::uint32_t, std::uintptr_t>> fastmap;
 
     for (auto i = 0; i < M0; ++i) {
         auto key = shuffle[i];
@@ -149,7 +149,7 @@ int main() {
     fastmap.clear();
 
 #if WITH_HOPSCOTCH
-    yfast::fastmap<std::uint32_t, void, N1, yfast::impl::BitExtractor<std::uint32_t>, tsl::hopscotch_map<std::uint32_t, std::uintptr_t>> fastmap_hopscotch;
+    yfast::fastmap<std::uint32_t, void, N1, yfast::internal::BitExtractor<std::uint32_t>, tsl::hopscotch_map<std::uint32_t, std::uintptr_t>> fastmap_hopscotch;
 
     for (auto i = 0; i < M0; ++i) {
         auto key = shuffle[i];
@@ -200,7 +200,7 @@ int main() {
 #endif
 
 #if WITH_FLAT_HASH
-    yfast::fastmap<std::uint32_t, void, N1, yfast::impl::BitExtractor<std::uint32_t>, absl::flat_hash_map<std::uint32_t, std::uintptr_t>> fastmap_flat_hash;
+    yfast::fastmap<std::uint32_t, void, N1, yfast::internal::BitExtractor<std::uint32_t>, absl::flat_hash_map<std::uint32_t, std::uintptr_t>> fastmap_flat_hash;
 
     for (auto i = 0; i < M0; ++i) {
         auto key = shuffle[i];
@@ -251,7 +251,7 @@ int main() {
 #endif
 
 #if WITH_DENSE_MAP
-    yfast::fastmap<std::uint32_t, void, N1, yfast::impl::BitExtractor<std::uint32_t>, ankerl::unordered_dense::map<std::uint32_t, std::uintptr_t>> fastmap_dense_map;
+    yfast::fastmap<std::uint32_t, void, N1, yfast::internal::BitExtractor<std::uint32_t>, ankerl::unordered_dense::map<std::uint32_t, std::uintptr_t>> fastmap_dense_map;
 
     for (auto i = 0; i < M0; ++i) {
         auto key = shuffle[i];
