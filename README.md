@@ -61,7 +61,7 @@ internal structures; `Hash`, however, only uses _any_ allocator if explicitly sp
     int main() {
         yfast::fastmap<std::uint32_t, std::string, 32> fastmap { {1, "one"}, {2, "two"}, {3, "three"} };
 
-        fastmap[4] = "four";
+        fastmap[0] = "zero";
     
         std::cout << "values: ";
         for (const auto& v: fastmap) {
@@ -71,7 +71,7 @@ internal structures; `Hash`, however, only uses _any_ allocator if explicitly sp
     
         assert(fastmap.size() == std::distance(fastmap.begin(), fastmap.end()));
     
-        auto i = fastmap.find(3);
+        auto i = fastmap.find(2);
         auto r = yfast::make_reverse_iterator(i);
     
         std::cout << "erasing onward" << std::endl;
