@@ -7,6 +7,11 @@
 
 namespace yfast::impl {
 
+/**
+ * <a href="https://en.wikipedia.org/wiki/AVL_tree">AVL tree</a> implementation
+ * @tparam Node node type
+ * @tparam Compare key comparator
+ */
 template <typename Node, typename Compare = std::less<typename Node::Key>>
 class AVL: public BST<Node, Compare> {
 public:
@@ -207,7 +212,7 @@ public:
         return node;
     }
 
-    SplitResult split() {
+    SplitResult split() {  // TODO: split by specified node
         if (_root == nullptr) {
             return { AVL(_cmp), AVL(_cmp), nullptr };
         }

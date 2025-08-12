@@ -11,6 +11,14 @@
 
 namespace yfast::impl {
 
+/**
+ * <a href="https://en.wikipedia.org/wiki/X-fast_trie">x-fast trie</a> implementation
+ * @tparam Leaf lower level leaf type
+ * @tparam H key length in bits
+ * @tparam BitExtractor helper type to provide key shifts and bit extractions
+ * @tparam Hash map from shifted keys to \a std::uintptr_t
+ * @tparam Compare key comparator
+ */
 template <
     typename Leaf,
     unsigned int H,
