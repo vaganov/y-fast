@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.0</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.1</span>
    </div>
   </td>
  </tr>
@@ -92,6 +92,8 @@ $(function(){initNavTree('classyfast_1_1impl_1_1_x_fast_trie.html','','classyfas
   <div class="headertitle"><div class="title">yfast::impl::XFastTrie&lt; Leaf, H, BitExtractor, Hash, Compare &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="impl_2xfast_8h_source.html">xfast.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-nested-classes" class="groupheader"><a id="nested-classes" name="nested-classes"></a>
 Classes</h2></td></tr>
@@ -105,7 +107,7 @@ typedef Leaf::Key&#160;</td><td class="memItemRight" valign="bottom"><b>Key</b><
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aa65a91736f7236b0e47219ce920ac9c3" id="r_aa65a91736f7236b0e47219ce920ac9c3"><td class="memItemLeft" align="right" valign="top"><a id="aa65a91736f7236b0e47219ce920ac9c3" name="aa65a91736f7236b0e47219ce920ac9c3"></a>
-&#160;</td><td class="memItemRight" valign="bottom"><b>XFastTrie</b> (<a class="el" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor</a> bx=<a class="el" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor</a>(), Compare cmp=Compare())</td></tr>
+&#160;</td><td class="memItemRight" valign="bottom"><b>XFastTrie</b> (BitExtractor bx=BitExtractor(), Compare cmp=Compare())</td></tr>
 <tr class="memitem:a7c03042adeab8d9b4305477341033427" id="r_a7c03042adeab8d9b4305477341033427"><td class="memItemLeft" align="right" valign="top"><a id="a7c03042adeab8d9b4305477341033427" name="a7c03042adeab8d9b4305477341033427"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>XFastTrie</b> (const <a class="el" href="classyfast_1_1impl_1_1_x_fast_trie.html">XFastTrie</a> &amp;other)=delete</td></tr>
 <tr class="memitem:add16bc1f45e8e9b3bfbb8e0908e9566a" id="r_add16bc1f45e8e9b3bfbb8e0908e9566a"><td class="memItemLeft" align="right" valign="top"><a id="add16bc1f45e8e9b3bfbb8e0908e9566a" name="add16bc1f45e8e9b3bfbb8e0908e9566a"></a>
@@ -137,7 +139,19 @@ Protected Types</h2></td></tr>
 <tr class="memitem:a3ab3b907486f29188a5d6c95c8204673" id="r_a3ab3b907486f29188a5d6c95c8204673"><td class="memItemLeft" align="right" valign="top"><a id="a3ab3b907486f29188a5d6c95c8204673" name="a3ab3b907486f29188a5d6c95c8204673"></a>
 typedef <a class="el" href="structyfast_1_1internal_1_1_x_fast_node.html">internal::XFastNode</a>&lt; Leaf &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>Node</b></td></tr>
 </table>
-<hr/>The documentation for this class was generated from the following file:<ul>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><div class="compoundTemplParams">template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typename Leaf::Key &gt; BitExtractor = internal::BitExtractor&lt;typename Leaf::Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;typename Leaf::Key&gt;&gt;<br />
+class yfast::impl::XFastTrie&lt; Leaf, H, BitExtractor, Hash, Compare &gt;</div><p><a href="https://en.wikipedia.org/wiki/X-fast_trie">x-fast trie</a> implementation </p><dl class="tparams"><dt>Template Parameters</dt><dd>
+  <table class="tparams">
+    <tr><td class="paramname">Leaf</td><td>lower level leaf type </td></tr>
+    <tr><td class="paramname">H</td><td>key length in bits </td></tr>
+    <tr><td class="paramname">BitExtractor</td><td>helper type to provide key shifts and bit extractions </td></tr>
+    <tr><td class="paramname">Hash</td><td>map from shifted keys to <em class="arg">std::uintptr_t</em> </td></tr>
+    <tr><td class="paramname">Compare</td><td>key comparator </td></tr>
+  </table>
+  </dd>
+</dl>
+</div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/yfast/impl/<a class="el" href="impl_2xfast_8h_source.html">xfast.h</a></li>
 </ul>
 </div><!-- contents -->

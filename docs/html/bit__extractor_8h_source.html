@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.14.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>yfast: include/yfast/impl/bit_extractor.h Source File</title>
+<title>yfast: include/yfast/internal/bit_extractor.h Source File</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.0</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.1</span>
    </div>
   </td>
  </tr>
@@ -92,8 +92,8 @@ $(function(){initNavTree('bit__extractor_8h_source.html','',''); });
   <div class="headertitle"><div class="title">bit_extractor.h</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef _YFAST_IMPL_BIT_EXTRACTOR_H</span></div>
-<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define _YFAST_IMPL_BIT_EXTRACTOR_H</span></div>
+<div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef _YFAST_INTERNAL_BIT_EXTRACTOR_H</span></div>
+<div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define _YFAST_INTERNAL_BIT_EXTRACTOR_H</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
 <div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;cstddef&gt;</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span><span class="preprocessor">#include &lt;string&gt;</span></div>
@@ -102,14 +102,14 @@ $(function(){initNavTree('bit__extractor_8h_source.html','',''); });
 <div class="line"><a id="l00008" name="l00008"></a><span class="lineno">    8</span> </div>
 <div class="line"><a id="l00009" name="l00009"></a><span class="lineno">    9</span><span class="preprocessor">#include &lt;yfast/internal/hash.h&gt;</span></div>
 <div class="line"><a id="l00010" name="l00010"></a><span class="lineno">   10</span> </div>
-<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">namespace </span>yfast::impl {</div>
+<div class="line"><a id="l00011" name="l00011"></a><span class="lineno">   11</span><span class="keyword">namespace </span>yfast::internal {</div>
 <div class="line"><a id="l00012" name="l00012"></a><span class="lineno">   12</span> </div>
 <div class="line"><a id="l00013" name="l00013"></a><span class="lineno">   13</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Key, <span class="keyword">typename</span> = <span class="keywordtype">void</span>&gt;</div>
-<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classyfast_1_1impl_1_1_bit_extractor.html">   14</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor</a>;</div>
+<div class="line"><a id="l00014" name="l00014"></a><span class="lineno"><a class="line" href="classyfast_1_1internal_1_1_bit_extractor.html">   14</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1internal_1_1_bit_extractor.html">BitExtractor</a>;</div>
 <div class="line"><a id="l00015" name="l00015"></a><span class="lineno">   15</span> </div>
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Key&gt;</div>
 <div class="foldopen" id="foldopen00017" data-start="{" data-end="};">
-<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classyfast_1_1impl_1_1_bit_extractor_3_01_key_00_01std_1_1enable__if__t_3_01std_1_1is__integral__v_3_01_key_01_4_01_4_01_4.html">   17</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor</a>&lt;Key, std::enable_if_t&lt;std::is_integral_v&lt;Key&gt;&gt;&gt; {</div>
+<div class="line"><a id="l00017" name="l00017"></a><span class="lineno"><a class="line" href="classyfast_1_1internal_1_1_bit_extractor_3_01_key_00_01std_1_1enable__if__t_3_01std_1_1is__integral__v_3_01_key_01_4_01_4_01_4.html">   17</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1internal_1_1_bit_extractor.html">BitExtractor</a>&lt;Key, std::enable_if_t&lt;std::is_integral_v&lt;Key&gt;&gt;&gt; {</div>
 <div class="line"><a id="l00018" name="l00018"></a><span class="lineno">   18</span><span class="keyword">public</span>:</div>
 <div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keyword">typedef</span> Key ShiftResult;</div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
@@ -120,7 +120,7 @@ $(function(){initNavTree('bit__extractor_8h_source.html','',''); });
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span><span class="keyword">template</span> &lt;&gt;</div>
 <div class="foldopen" id="foldopen00026" data-start="{" data-end="};">
-<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="classyfast_1_1impl_1_1_bit_extractor_3_01std_1_1vector_3_01std_1_1byte_01_4_01_4.html">   26</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor</a>&lt;std::vector&lt;std::byte&gt;&gt; {</div>
+<div class="line"><a id="l00026" name="l00026"></a><span class="lineno"><a class="line" href="classyfast_1_1internal_1_1_bit_extractor_3_01std_1_1vector_3_01std_1_1byte_01_4_01_4.html">   26</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1internal_1_1_bit_extractor.html">BitExtractor</a>&lt;std::vector&lt;std::byte&gt;&gt; {</div>
 <div class="line"><a id="l00027" name="l00027"></a><span class="lineno">   27</span><span class="keyword">public</span>:</div>
 <div class="line"><a id="l00028" name="l00028"></a><span class="lineno">   28</span>    <span class="keyword">typedef</span> std::vector&lt;std::byte&gt; ShiftResult;</div>
 <div class="line"><a id="l00029" name="l00029"></a><span class="lineno">   29</span> </div>
@@ -170,18 +170,18 @@ $(function(){initNavTree('bit__extractor_8h_source.html','',''); });
 <div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span> </div>
 <div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="keyword">template</span> &lt;&gt;</div>
 <div class="foldopen" id="foldopen00074" data-start="{" data-end="};">
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="classyfast_1_1impl_1_1_bit_extractor_3_01std_1_1string_01_4.html">   74</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor</a>&lt;std::string&gt; {</div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno"><a class="line" href="classyfast_1_1internal_1_1_bit_extractor_3_01std_1_1string_01_4.html">   74</a></span><span class="keyword">class </span><a class="code hl_class" href="classyfast_1_1internal_1_1_bit_extractor.html">BitExtractor</a>&lt;std::string&gt; {</div>
 <div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="keyword">public</span>:</div>
 <div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span>    <span class="keyword">typedef</span> std::vector&lt;std::byte&gt; ShiftResult;</div>
 <div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span> </div>
 <div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> extract_bit(<span class="keyword">const</span> std::string&amp; key, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> n) {</div>
 <div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span>        <span class="keyword">const</span> <span class="keyword">auto</span> data = <span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>std::byte*<span class="keyword">&gt;</span>(key.data());</div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor&lt;std::vector&lt;std::byte&gt;</a>&gt;::extract_bit(data, key.size(), n);</div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classyfast_1_1internal_1_1_bit_extractor.html">BitExtractor&lt;std::vector&lt;std::byte&gt;</a>&gt;::extract_bit(data, key.size(), n);</div>
 <div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span>    }</div>
 <div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span> </div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span>    <span class="keyword">static</span> std::vector&lt;std::byte&gt; shift(<span class="keyword">const</span> std::string&amp; key, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> n) {</div>
 <div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span>        <span class="keyword">const</span> <span class="keyword">auto</span> data = <span class="keyword">reinterpret_cast&lt;</span><span class="keyword">const </span>std::byte*<span class="keyword">&gt;</span>(key.data());</div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classyfast_1_1impl_1_1_bit_extractor.html">BitExtractor&lt;std::vector&lt;std::byte&gt;</a>&gt;::shift(data, key.size(), n);</div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span>        <span class="keywordflow">return</span> <a class="code hl_class" href="classyfast_1_1internal_1_1_bit_extractor.html">BitExtractor&lt;std::vector&lt;std::byte&gt;</a>&gt;::shift(data, key.size(), n);</div>
 <div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span>    }</div>
 <div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span>};</div>
 </div>
@@ -189,7 +189,7 @@ $(function(){initNavTree('bit__extractor_8h_source.html','',''); });
 <div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span>}</div>
 <div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span> </div>
 <div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="preprocessor">#endif</span></div>
-<div class="ttc" id="aclassyfast_1_1impl_1_1_bit_extractor_html"><div class="ttname"><a href="classyfast_1_1impl_1_1_bit_extractor.html">yfast::impl::BitExtractor</a></div><div class="ttdef"><b>Definition</b> bit_extractor.h:14</div></div>
+<div class="ttc" id="aclassyfast_1_1internal_1_1_bit_extractor_html"><div class="ttname"><a href="classyfast_1_1internal_1_1_bit_extractor.html">yfast::internal::BitExtractor</a></div><div class="ttdef"><b>Definition</b> bit_extractor.h:14</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->
@@ -197,7 +197,7 @@ $(function(){initNavTree('bit__extractor_8h_source.html','',''); });
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a href="dir_e9c64d34444a59001bb67c599c26edc2.html">yfast</a></li><li class="navelem"><a href="dir_d96ef6343a941c62964a63d213db4ad6.html">impl</a></li><li class="navelem"><b>bit_extractor.h</b></li>
+    <li class="navelem"><a href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li><li class="navelem"><a href="dir_e9c64d34444a59001bb67c599c26edc2.html">yfast</a></li><li class="navelem"><a href="dir_659bcb7d37f662588d0ba8e4705948ce.html">internal</a></li><li class="navelem"><b>bit_extractor.h</b></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.14.0 with <a href="https://jothepro.github.io/doxygen-awesome-css">doxygen-awesome</a> 2.3.4 </li>
   </ul>
 </div>

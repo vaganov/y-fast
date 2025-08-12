@@ -1,19 +1,19 @@
 var hierarchy =
 [
-    [ "yfast::internal::align_traits< T >", "structyfast_1_1internal_1_1align__traits.html", null ],
-    [ "yfast::internal::align_traits< void >", "structyfast_1_1internal_1_1align__traits_3_01void_01_4.html", null ],
-    [ "yfast::internal::aligned_ptr< N, T >", "structyfast_1_1internal_1_1aligned__ptr.html", null ],
-    [ "yfast::internal::aligned_ptr< 2, Leaf >", "structyfast_1_1internal_1_1aligned__ptr.html", [
+    [ "yfast::utils::align_traits< T >", "structyfast_1_1utils_1_1align__traits.html", null ],
+    [ "yfast::utils::align_traits< void >", "structyfast_1_1utils_1_1align__traits_3_01void_01_4.html", null ],
+    [ "yfast::utils::aligned_ptr< N, T >", "structyfast_1_1utils_1_1aligned__ptr.html", null ],
+    [ "yfast::utils::aligned_ptr< 2, Leaf >", "structyfast_1_1utils_1_1aligned__ptr.html", [
       [ "yfast::internal::XFastNode< Leaf >", "structyfast_1_1internal_1_1_x_fast_node.html", null ]
     ] ],
-    [ "yfast::internal::aligned_ptr< 2, yfast::internal::XFastLeaf >", "structyfast_1_1internal_1_1aligned__ptr.html", [
+    [ "yfast::utils::aligned_ptr< 2, yfast::internal::XFastLeaf >", "structyfast_1_1utils_1_1aligned__ptr.html", [
       [ "yfast::internal::XFastNode< yfast::internal::XFastLeaf >", "structyfast_1_1internal_1_1_x_fast_node.html", null ]
     ] ],
     [ "yfast::impl::XFastTrie< Leaf, H, BitExtractor, Hash, Compare >::ApproxReport", "structyfast_1_1impl_1_1_x_fast_trie_1_1_approx_report.html", null ],
-    [ "yfast::impl::BitExtractor< Key, typename >", "classyfast_1_1impl_1_1_bit_extractor.html", null ],
-    [ "yfast::impl::BitExtractor< Key, std::enable_if_t< std::is_integral_v< Key > > >", "classyfast_1_1impl_1_1_bit_extractor_3_01_key_00_01std_1_1enable__if__t_3_01std_1_1is__integral__v_3_01_key_01_4_01_4_01_4.html", null ],
-    [ "yfast::impl::BitExtractor< std::string >", "classyfast_1_1impl_1_1_bit_extractor_3_01std_1_1string_01_4.html", null ],
-    [ "yfast::impl::BitExtractor< std::vector< std::byte > >", "classyfast_1_1impl_1_1_bit_extractor_3_01std_1_1vector_3_01std_1_1byte_01_4_01_4.html", null ],
+    [ "yfast::internal::BitExtractor< Key, typename >", "classyfast_1_1internal_1_1_bit_extractor.html", null ],
+    [ "yfast::internal::BitExtractor< Key, std::enable_if_t< std::is_integral_v< Key > > >", "classyfast_1_1internal_1_1_bit_extractor_3_01_key_00_01std_1_1enable__if__t_3_01std_1_1is__integral__v_3_01_key_01_4_01_4_01_4.html", null ],
+    [ "yfast::internal::BitExtractor< std::string >", "classyfast_1_1internal_1_1_bit_extractor_3_01std_1_1string_01_4.html", null ],
+    [ "yfast::internal::BitExtractor< std::vector< std::byte > >", "classyfast_1_1internal_1_1_bit_extractor_3_01std_1_1vector_3_01std_1_1byte_01_4_01_4.html", null ],
     [ "yfast::impl::BST< Node, Compare >", "classyfast_1_1impl_1_1_b_s_t.html", [
       [ "yfast::impl::AVL< Leaf, Compare >", "classyfast_1_1impl_1_1_a_v_l.html", null ],
       [ "yfast::impl::AVL< Node, Compare >", "classyfast_1_1impl_1_1_a_v_l.html", null ]
@@ -51,5 +51,6 @@ var hierarchy =
     ] ],
     [ "yfast::impl::XFastTrie< Leaf, H, BitExtractor, Hash, Compare >", "classyfast_1_1impl_1_1_x_fast_trie.html", null ],
     [ "yfast::impl::YFastTrie< Leaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator >", "classyfast_1_1impl_1_1_y_fast_trie.html", null ],
+    [ "BitExtractor", "class_bit_extractor.html", null ],
     [ "Hash", "class_hash.html", null ]
 ];

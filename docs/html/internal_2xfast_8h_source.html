@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.0</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.1</span>
    </div>
   </td>
  </tr>
@@ -95,7 +95,7 @@ $(function(){initNavTree('internal_2xfast_8h_source.html','',''); });
 <div class="fragment"><div class="line"><a id="l00001" name="l00001"></a><span class="lineno">    1</span><span class="preprocessor">#ifndef _YFAST_INTERNAL_XFAST_H</span></div>
 <div class="line"><a id="l00002" name="l00002"></a><span class="lineno">    2</span><span class="preprocessor">#define _YFAST_INTERNAL_XFAST_H</span></div>
 <div class="line"><a id="l00003" name="l00003"></a><span class="lineno">    3</span> </div>
-<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;yfast/internal/aligned.h&gt;</span></div>
+<div class="line"><a id="l00004" name="l00004"></a><span class="lineno">    4</span><span class="preprocessor">#include &lt;yfast/utils/aligned.h&gt;</span></div>
 <div class="line"><a id="l00005" name="l00005"></a><span class="lineno">    5</span> </div>
 <div class="line"><a id="l00006" name="l00006"></a><span class="lineno">    6</span><span class="keyword">namespace </span>yfast::internal {</div>
 <div class="line"><a id="l00007" name="l00007"></a><span class="lineno">    7</span> </div>
@@ -112,12 +112,12 @@ $(function(){initNavTree('internal_2xfast_8h_source.html','',''); });
 <div class="line"><a id="l00016" name="l00016"></a><span class="lineno">   16</span> </div>
 <div class="line"><a id="l00017" name="l00017"></a><span class="lineno">   17</span><span class="keyword">template</span> &lt;<span class="keyword">typename</span> Leaf&gt;</div>
 <div class="foldopen" id="foldopen00018" data-start="{" data-end="};">
-<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="structyfast_1_1internal_1_1_x_fast_node.html">   18</a></span><span class="keyword">struct </span>XFastNode: <span class="keyword">private</span> aligned_ptr&lt;2, Leaf&gt; {</div>
-<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keyword">using </span>aligned_ptr&lt;2, Leaf&gt;::value;</div>
+<div class="line"><a id="l00018" name="l00018"></a><span class="lineno"><a class="line" href="structyfast_1_1internal_1_1_x_fast_node.html">   18</a></span><span class="keyword">struct </span>XFastNode: <span class="keyword">private</span> <a class="code hl_struct" href="structyfast_1_1utils_1_1aligned__ptr.html">utils::aligned_ptr</a>&lt;2, Leaf&gt; {</div>
+<div class="line"><a id="l00019" name="l00019"></a><span class="lineno">   19</span>    <span class="keyword">using </span><a class="code hl_struct" href="structyfast_1_1utils_1_1aligned__ptr.html">utils::aligned_ptr</a>&lt;2, Leaf&gt;::value;</div>
 <div class="line"><a id="l00020" name="l00020"></a><span class="lineno">   20</span> </div>
-<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    XFastNode(): aligned_ptr&lt;2, Leaf&gt;() {}</div>
-<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    XFastNode(std::uintptr_t value): aligned_ptr&lt;2, Leaf&gt;(value) {}</div>
-<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    XFastNode(Leaf* leaf, <span class="keywordtype">bool</span> left_present, <span class="keywordtype">bool</span> right_present): aligned_ptr&lt;2, Leaf&gt;(leaf, left_present, right_present) {}</div>
+<div class="line"><a id="l00021" name="l00021"></a><span class="lineno">   21</span>    XFastNode(): <a class="code hl_struct" href="structyfast_1_1utils_1_1aligned__ptr.html">utils::aligned_ptr&lt;2, Leaf&gt;</a>() {}</div>
+<div class="line"><a id="l00022" name="l00022"></a><span class="lineno">   22</span>    XFastNode(std::uintptr_t value): <a class="code hl_struct" href="structyfast_1_1utils_1_1aligned__ptr.html">utils::aligned_ptr&lt;2, Leaf&gt;</a>(value) {}</div>
+<div class="line"><a id="l00023" name="l00023"></a><span class="lineno">   23</span>    XFastNode(Leaf* leaf, <span class="keywordtype">bool</span> left_present, <span class="keywordtype">bool</span> right_present): <a class="code hl_struct" href="structyfast_1_1utils_1_1aligned__ptr.html">utils::aligned_ptr&lt;2, Leaf&gt;</a>(leaf, left_present, right_present) {}</div>
 <div class="line"><a id="l00024" name="l00024"></a><span class="lineno">   24</span> </div>
 <div class="line"><a id="l00025" name="l00025"></a><span class="lineno">   25</span>    Leaf* descendant()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;get_ptr(); };</div>
 <div class="line"><a id="l00026" name="l00026"></a><span class="lineno">   26</span>    [[nodiscard]] <span class="keywordtype">bool</span> left_present()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> this-&gt;get_bit(0); };</div>
@@ -135,6 +135,7 @@ $(function(){initNavTree('internal_2xfast_8h_source.html','',''); });
 <div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span> </div>
 <div class="line"><a id="l00038" name="l00038"></a><span class="lineno">   38</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="astructyfast_1_1internal_1_1_x_fast_leaf_base_html"><div class="ttname"><a href="structyfast_1_1internal_1_1_x_fast_leaf_base.html">yfast::internal::XFastLeafBase</a></div><div class="ttdef"><b>Definition</b> xfast.h:9</div></div>
+<div class="ttc" id="astructyfast_1_1utils_1_1aligned__ptr_html"><div class="ttname"><a href="structyfast_1_1utils_1_1aligned__ptr.html">yfast::utils::aligned_ptr</a></div><div class="ttdef"><b>Definition</b> aligned.h:22</div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->
