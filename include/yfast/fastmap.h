@@ -34,7 +34,7 @@ template <
     internal::BitExtractorGeneric<Key> BitExtractor = internal::BitExtractor<Key>,
     internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
     typename Compare = std::less<Key>,
-    typename ArbitraryAllocator = std::allocator<Key>
+    typename ArbitraryAllocator = std::allocator<std::pair<Key, Value>>
 >
 class fastmap {
 public:
