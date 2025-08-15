@@ -13,13 +13,31 @@ namespace yfast::impl {
 template <typename Node, typename Compare = std::less<typename Node::Key>>
 class BST {
 public:
+    /**
+     * node key type
+     */
     typedef typename Node::Key Key;
 
+    /**
+     * structure returned by the \a remove() method
+     */
     typedef struct {
+        /**
+         * substitution node: will have the same parent as the removed node had
+         */
         Node* substitution;
-        Node* subtree_parent;  // height changed
-        Node* subtree_child;  // height unchanged
-        bool is_left_child;  // NB: only matters if subtree_parent != nullptr
+        /**
+         * parent of the modified subtree: the bottommost node with height changed
+         */
+        Node* subtree_parent;
+        /**
+         * root of the modified subtree: the topmost node with height unchanged
+         */
+        Node* subtree_child;
+        /**
+         * whether \a subtree_child is the left child; NB: only makes sense if \a subtree_parent != \a nullptr
+         */
+        bool is_left_child;
     } RemoveReport;
 
 protected:
@@ -35,11 +53,32 @@ public:
         other._root = nullptr;
     }
 
-    [[nodiscard]] unsigned int size() const { return _root != nullptr ? _root->size : 0; }
+    /**
+     * @return the number of nodes in the tree
+     */
+    [[nodiscard]] std::size_t size() const { return _root != nullptr ? _root->size : 0; }
+
+    /**
+     * @return pointer to the tree root
+     */
     Node* root() const { return _root; }
+
+    /**
+     * @return pointer to the node with the minimal key in the tree
+     */
     Node* leftmost() const { return _root != nullptr ? _leftmost(_root) : nullptr; }
+
+    /**
+     * @return pointer to the node with the maximal key in the tree
+     */
     Node* rightmost() const { return _root != nullptr ? _rightmost(_root) : nullptr; }
 
+    /**
+     * find a node with an equal key \n
+     * keys \a key1 and \a key2 are considered equal if neither \a cmp(key1, key2) nor \a cmp(key2, key1)
+     * @param key key to find
+     * @return pointer to the node with the key equal to \a key or \a nullptr
+     */
     Node* find(const Key& key) const {
         auto probe = _root;
         while (probe != nullptr) {
@@ -56,6 +95,12 @@ public:
         return nullptr;
     }
 
+    /**
+     * find a predecessor node for a key
+     * @param key key
+     * @param strict whether a node with the key strictly less than \a key should be returned
+     * @return pointer to the node with the maximal key either not greater or strictly less than \a key
+     */
     Node* pred(const Key& key, bool strict = false) const {
         auto node = seek(key);
         if (node == nullptr) {
@@ -70,6 +115,12 @@ public:
         return strict ? pred(node) : node;
     }
 
+    /**
+     * find a successor node for a key
+     * @param key key
+     * @param strict whether a node with the key strictly greater than \a key should be returned
+     * @return pointer to the node with the minimal key either not less or strictly greater than \a key
+     */
     Node* succ(const Key& key, bool strict = false) const {
         auto node = seek(key);
         if (node == nullptr) {
@@ -147,6 +198,11 @@ public:
         return nullptr;
     }
 
+    /**
+     * remove a node from the tree
+     * @param node node to remove; undefined behavior if not in the tree
+     * @return \a RemoveReport structure
+     */
     RemoveReport remove(Node* node) {
         auto parent = node->parent;
         bool left_path;

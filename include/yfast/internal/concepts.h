@@ -10,6 +10,7 @@ concept MapGeneric = requires (Map map, Key key) {
     { map[key] } -> std::same_as<Value&>;
     { map.at(key) } -> std::convertible_to<Value>;
     { map.contains(key) } -> std::convertible_to<bool>;
+    { map.size() } -> std::convertible_to<std::size_t>;
     { map.erase(key) };
     { map.clear() };
 };
