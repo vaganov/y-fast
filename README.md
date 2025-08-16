@@ -5,8 +5,8 @@ based upon [Y-fast trie](https://en.wikipedia.org/wiki/Y-fast_trie)
 
 Asymptotically all the basic operations (find exact match, find predecessor/successor, insert/delete) in the y-fast trie
 data structure take amortized `O(ln H)` time (assuming `H` is the bit length of key). The main goal of this library is
-to provide a faster container than classic sorted associative containers (represented in benchmark tests by `std::map`)
-in practice. This, however, may only be achieved under certain conditions. Namely, to profit from using
+to provide an essentially faster container than classic sorted associative containers (represented in benchmark tests by
+`std::map`) in practice. This, however, may only be achieved under certain conditions. Namely, to profit from using
 `yfast::fastmap`, one:
 - **must** operate a large size container (over one million entries for faster lookups and over ten million entries for
 faster inserts)
@@ -230,7 +230,7 @@ hash tables.
 While `yfast::fastmap` is merely a wrapper (mostly iterator paperwork), these classes implement underlying data
 structures:
 - `yfast::impl::BST` &mdash; [Binary search tree](https://en.wikipedia.org/wiki/Binary_search_tree)
-- `yfast::impl::AVL` &mdash; [AVL tree](https://en.wikipedia.org/wiki/AVL_tree) on top of `yfast::impl::BST`
+- `yfast::impl::AVL` &mdash; [AVL tree](https://en.wikipedia.org/wiki/AVL_tree) subclassing `yfast::impl::BST`
 - `yfast::impl::XFastTrie` &mdash; [X-fast trie](https://en.wikipedia.org/wiki/X-fast_trie)
 - `yfast::impl::YFastTrie` &mdash; [Y-fast trie](https://en.wikipedia.org/wiki/Y-fast_trie) on top of
 `yfast::impl::XFastTrie` and `yfast::impl::AVL`
@@ -241,3 +241,10 @@ Why bother implementing self-balancing binary trees: neither
 self-balancing tree implementations provide a way to split a tree into two subtrees of comparable size in linear (in
 size) time or better, which is crucial for inserting an entry into a y-fast trie. `yfast::impl::AVL` comes with
 `split()` method to split a tree by root in logarithmic (in size) time.
+
+Although not optimized design-wise, `yfast::impl` classes have solid interfaces and may be used on their own. Here are
+auto-generated docs:
+- [yfast::impl::BST](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_b_s_t.html)
+- [yfast::impl::AVL](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_a_v_l.html)
+- [yfast::impl::XFastTrie](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_x_fast_trie.html)
+- [yfast::impl::YFastTrie](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_y_fast_trie.html)
