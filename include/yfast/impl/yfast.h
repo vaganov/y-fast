@@ -44,12 +44,27 @@ private:
     static constexpr auto TREE_MERGE_THRESHOLD = H / 4;
 
 public:
+    /**
+     * location in the y-fast trie
+     */
     struct Where {
+        /**
+         * pointer to the y-fast trie
+         */
         const YFastTrie* trie;
+        /**
+         * pointer to the leaf in the underlying x-fast trie
+         */
         XFastLeaf* xleaf;
+        /**
+         * pointer to the leaf in the underlying AVL tree
+         */
         Leaf* leaf;
     };
 
+    /**
+     * null location
+     */
     const Where nowhere = { this, nullptr, nullptr };
 
 private:
@@ -66,21 +81,40 @@ public:
         other._rebuilds = 0;
     }
 
+    /**
+     * @return the number of leaves in the trie
+     */
     [[nodiscard]] std::size_t size() const { return _size; }
+
+    /**
+     * a trie rebuild occurs when a leaf is inserted to or removed from the underlying x-fast trie
+     * @return trie rebuild count
+     */
     [[nodiscard]] unsigned int rebuilds() const { return _rebuilds; }
 
+    /**
+     * @return location of the leaf with the minimal key in the trie
+     */
     Where leftmost() const {
         auto xleaf = _trie.leftmost();
         auto leaf = xleaf != nullptr ? xleaf->value.leftmost() : nullptr;
         return { this, xleaf, leaf };
     }
 
+    /**
+     * @return location of the leaf with the maximal key in the trie
+     */
     Where rightmost() const {
         auto xleaf = _trie.rightmost();
         auto leaf = xleaf != nullptr ? xleaf->value.rightmost() : nullptr;
         return { this, xleaf, leaf };
     }
 
+    /**
+     * find a leaf with an equal key
+     * @param key key to find
+     * @return location of the leaf with the key equal to \a key or \a nowhere
+     */
     Where find(const Key& key) const {
         auto pred = _trie.pred(key);
         if (pred != nullptr) {
@@ -96,9 +130,15 @@ public:
                 return { this, succ, leaf };
             }
         }
-        return { this, nullptr, nullptr };
+        return nowhere;
     }
 
+    /**
+     * find a predecessor leaf for a key
+     * @param key key
+     * @param strict whether a leaf with the key strictly less than \a key should be returned
+     * @return location of the leaf with the maximal key either not greater or strictly less than \a key
+     */
     Where pred(const Key& key, bool strict = false) const {
         auto pred = _trie.pred(key, strict);
         if (pred != nullptr) {
@@ -130,6 +170,12 @@ public:
         }
     }
 
+    /**
+     * find a successor leaf for a key
+     * @param key key
+     * @param strict whether a leaf with the key strictly greater than \a key should be returned
+     * @return location of the leaf with the minimal key either not less or strictly greater than \a key
+     */
     Where succ(const Key& key, bool strict = false) const {
         auto succ = _trie.succ(key, strict);
         if (succ != nullptr) {
@@ -164,7 +210,10 @@ public:
     /**
      * insert a new leaf
      * @param leaf leaf to insert
-     * @return Where with fields: trie -- \a this; xleaf -- new leaf's x-fast trie node; leaf -- NB: replaced leaf (if any)
+     * @return \a Where with fields: \n
+     * \a trie -- \a this \n
+     * \a xleaf -- new leaf's x-fast trie node \n
+     * \a leaf -- NB: replaced leaf (if any)
      */
     Where insert(Leaf* leaf) {
         auto pred = _trie.pred(leaf->key);
@@ -214,6 +263,11 @@ public:
         return { this, xleaf, replaced };
     }
 
+    /**
+     * remove a leaf from the trie
+     * @param leaf leaf to remove; undefined behavior if not in the trie; leaf is neither deallocated nor destroyed
+     * @param hint supposed leaf in the underlying x-fast trie; must either point to an existing leaf or be \a nullptr
+     */
     void remove(Leaf* leaf, XFastLeaf* hint = nullptr) {
         auto xleaf = hint;
         if (xleaf == nullptr || xleaf->value.find(leaf->key) != leaf) {
@@ -271,6 +325,9 @@ public:
         --_size;
     }
 
+    /**
+     * remove all the internal nodes; leaves are neither deallocated nor destroyed
+     */
     void clear() {
         for (auto xleaf = _trie.leftmost(); xleaf != nullptr; xleaf = xleaf->nxt) {
             std::allocator_traits<Alloc>::destroy(_alloc, xleaf);

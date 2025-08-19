@@ -34,7 +34,7 @@ template <
     internal::BitExtractorGeneric<Key> BitExtractor = internal::BitExtractor<Key>,
     internal::MapGeneric<typename BitExtractor::ShiftResult, std::uintptr_t> Hash = internal::DefaultHash<typename BitExtractor::ShiftResult, std::uintptr_t>,
     typename Compare = std::less<Key>,
-    typename ArbitraryAllocator = std::allocator<std::pair<Key, Value>>
+    typename ArbitraryAllocator = std::allocator<Key>
 >
 class fastmap {
 public:
@@ -554,7 +554,7 @@ public:
      * find a predecessor entry for a key
      * @param key key
      * @param strict whether an entry with the key strictly less than \a key should be returned
-     * @return iterator pointing to the entry with the key either not greater or strictly less than \a key
+     * @return iterator pointing to the entry with the maximal key either not greater or strictly less than \a key
      */
     iterator pred(const Key& key, bool strict = false) {
         auto where = _trie.pred(key, strict);
@@ -565,7 +565,7 @@ public:
      * find a predecessor entry for a key
      * @param key key
      * @param strict whether an entry with the key strictly less than \a key should be returned
-     * @return const iterator pointing to the entry with the key either not greater or strictly less than \a key
+     * @return const iterator pointing to the entry with the maximal key either not greater or strictly less than \a key
      */
     const_iterator pred(const Key& key, bool strict = false) const {
         auto where = _trie.pred(key, strict);
@@ -576,7 +576,7 @@ public:
      * find a successor entry for a key
      * @param key key
      * @param strict whether an entry with the key strictly greater than \a key should be returned
-     * @return iterator pointing to the entry with the key either not less or strictly greater than \a key
+     * @return iterator pointing to the entry with the minimal key either not less or strictly greater than \a key
      */
     iterator succ(const Key& key, bool strict = false) {
         auto where = _trie.succ(key, strict);
@@ -587,7 +587,7 @@ public:
      * find a successor entry for a key
      * @param key key
      * @param strict whether an entry with the key strictly greater than \a key should be returned
-     * @return const iterator pointing to the entry with the key either not less or strictly greater than \a key
+     * @return const iterator pointing to the entry with the minimal key either not less or strictly greater than \a key
      */
     const_iterator succ(const Key& key, bool strict = false) const {
         auto where = _trie.succ(key, strict);
@@ -597,7 +597,7 @@ public:
     /**
      * find a successor entry for a key
      * @param key key
-     * @return iterator pointing to the entry with the key not less than \a key
+     * @return iterator pointing to the entry with the minimal key not less than \a key
      */
     iterator lower_bound(const Key& key) {
         return succ(key);
@@ -606,7 +606,7 @@ public:
     /**
      * find a successor entry for a key
      * @param key key
-     * @return const iterator pointing to the entry with the key not less than \a key
+     * @return const iterator pointing to the entry with the minimal key not less than \a key
      */
     const_iterator lower_bound(const Key& key) const {
         return succ(key);
@@ -615,7 +615,7 @@ public:
     /**
      * find a successor entry for a key
      * @param key key
-     * @return iterator pointing to the entry with the key strictly greater than \a key
+     * @return iterator pointing to the entry with the minimal key strictly greater than \a key
      */
     iterator upper_bound(const Key& key) {
         return succ(key, true);
@@ -624,7 +624,7 @@ public:
     /**
      * find a successor entry for a key
      * @param key key
-     * @return const iterator pointing to the entry with the key strictly greater than \a key
+     * @return const iterator pointing to the entry with the minimal key strictly greater than \a key
      */
     const_iterator upper_bound(const Key& key) const {
         return succ(key, true);

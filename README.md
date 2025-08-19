@@ -5,8 +5,8 @@ based upon [Y-fast trie](https://en.wikipedia.org/wiki/Y-fast_trie)
 
 Asymptotically all the basic operations (find exact match, find predecessor/successor, insert/delete) in the y-fast trie
 data structure take amortized `O(ln H)` time (assuming `H` is the bit length of key). The main goal of this library is
-to provide a faster container than classic sorted associative containers (represented in benchmark tests by `std::map`)
-in practice. This, however, may only be achieved under certain conditions. Namely, to profit from using
+to provide an essentially faster container than classic sorted associative containers (represented in benchmark tests by
+`std::map`) in practice. This, however, may only be achieved under certain conditions. Namely, to profit from using
 `yfast::fastmap`, one:
 - **must** operate a large size container (over one million entries for faster lookups and over ten million entries for
 faster inserts)
@@ -17,34 +17,6 @@ faster inserts)
 See [Performance](#performance) for details and benchmark test results
 
 ## Usage
-### Template parameters
-- `Key` &mdash; key type for the map to be indexed with; must be:
-  - _copyable_ and
-  - _bit-representable_ (see `BitExtractor`) and
-  - _comparable_ (see `Compare`)
-- `Value` &mdash; value type to be stored in the map; must be either
-  - _copyable_ or
-  - _movable_ or
-  - `void` (in which case no value is stored in the map and iterator dereference policy alters)
-- `H` &mdash; key length; doesn't have to be a power of two or match `sizeof(Key)`; cannot be less than `8` though
-- `BitExtractor` &mdash; helper type to provide key shifts and bit extractions; must be compliant with
-[yfast::internal::BitExtractorGeneric](include/yfast/internal/concepts.h) concept; whatever type is returned by
-`shift()` must be hashable (see `Hash`); `yfast::fastmap` comes with a default implementation
-`yfast::internal::BitExtractor` for these types:
-  - all integral types
-  - `std::vector<std::byte>`
-  - `std::string` (which is basically treated as `std::vector<std::byte>`)
-- `Hash` &mdash; map from shifted keys to `std::uintptr_t`; must be compliant with
-[yfast::internal::MapGeneric](include/yfast/internal/concepts.h) concept and _default-constructible_;
-[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) _with default allocator_ is used as default (unless
-`YFAST_WITHOUT_HOPSCOTCH_MAP` macro is defined, in which case `std::unordered_map` _with default allocator_ is used)
-- `Compare` &mdash; key comparator; must be _copyable_; the order provided by `Compare` must match the lexicographic
-order provided by `BitExtractor`; `std::less` is used as default
-- `ArbitraryAllocator` &mdash; allocator; this allocator will not be used directly but rather rebound via
-[std::allocator_traits::rebind_alloc](https://en.cppreference.com/w/cpp/memory/allocator_traits.html) to allocate
-internal structures; `Hash`, however, only uses _any_ allocator if explicitly specified;
-`std::allocator<std::pair<Key, Value>>` is used as default
-
 ### Basic usage example
 
     #include <cassert>
@@ -90,6 +62,34 @@ internal structures; `Hash`, however, only uses _any_ allocator if explicitly sp
     
         return EXIT_SUCCESS;
     }
+
+### Template parameters
+- `Key` &mdash; key type for the map to be indexed with; must be:
+  - _copyable_ and
+  - _bit-representable_ (see `BitExtractor`) and
+  - _comparable_ (see `Compare`)
+- `Value` &mdash; value type to be stored in the map; must be either
+  - _copyable_ or
+  - _movable_ or
+  - `void` (in which case no value is stored in the map and iterator dereference policy alters)
+- `H` &mdash; key length; doesn't have to be a power of two or match `sizeof(Key)`; cannot be less than `8` though
+- `BitExtractor` &mdash; helper type to provide key shifts and bit extractions; must be compliant with
+[yfast::internal::BitExtractorGeneric](include/yfast/internal/concepts.h) concept; whatever type is returned by
+`shift()` must be hashable (see `Hash`); `yfast::fastmap` comes with a default implementation
+`yfast::internal::BitExtractor` for these types:
+  - all integral types
+  - `std::vector<std::byte>`
+  - `std::string` (which is basically treated as `std::vector<std::byte>`)
+- `Hash` &mdash; map from shifted keys to `std::uintptr_t`; must be compliant with
+[yfast::internal::MapGeneric](include/yfast/internal/concepts.h) concept and _default-constructible_;
+[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) _with default allocator_ is used as default (unless
+`YFAST_WITHOUT_HOPSCOTCH_MAP` macro is defined, in which case `std::unordered_map` _with default allocator_ is used)
+- `Compare` &mdash; key comparator; must be _copyable_; the order provided by `Compare` must match the lexicographic
+order provided by `BitExtractor`; `std::less` is used as default
+- `ArbitraryAllocator` &mdash; allocator; this allocator will not be used directly but rather rebound via
+[std::allocator_traits::rebind_alloc](https://en.cppreference.com/w/cpp/memory/allocator_traits.html) to allocate
+internal structures; `Hash`, however, only uses _any_ allocator if explicitly specified; `std::allocator<Key>` is used
+as default
 
 ### Iterators
 `yfast::fastmap` is equipped with mutable and const bidirectional iterators, both forward and reverse. Apart from
@@ -230,7 +230,7 @@ hash tables.
 While `yfast::fastmap` is merely a wrapper (mostly iterator paperwork), these classes implement underlying data
 structures:
 - `yfast::impl::BST` &mdash; [Binary search tree](https://en.wikipedia.org/wiki/Binary_search_tree)
-- `yfast::impl::AVL` &mdash; [AVL tree](https://en.wikipedia.org/wiki/AVL_tree) on top of `yfast::impl::BST`
+- `yfast::impl::AVL` &mdash; [AVL tree](https://en.wikipedia.org/wiki/AVL_tree) subclassing `yfast::impl::BST`
 - `yfast::impl::XFastTrie` &mdash; [X-fast trie](https://en.wikipedia.org/wiki/X-fast_trie)
 - `yfast::impl::YFastTrie` &mdash; [Y-fast trie](https://en.wikipedia.org/wiki/Y-fast_trie) on top of
 `yfast::impl::XFastTrie` and `yfast::impl::AVL`
@@ -241,3 +241,10 @@ Why bother implementing self-balancing binary trees: neither
 self-balancing tree implementations provide a way to split a tree into two subtrees of comparable size in linear (in
 size) time or better, which is crucial for inserting an entry into a y-fast trie. `yfast::impl::AVL` comes with
 `split()` method to split a tree by root in logarithmic (in size) time.
+
+Although not optimized design-wise, `yfast::impl` classes have solid interfaces and may be used on their own. Here are
+auto-generated docs:
+- [yfast::impl::BST](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_b_s_t.html)
+- [yfast::impl::AVL](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_a_v_l.html)
+- [yfast::impl::XFastTrie](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_x_fast_trie.html)
+- [yfast::impl::YFastTrie](https://vaganov.github.io/y-fast/html/classyfast_1_1impl_1_1_y_fast_trie.html)
