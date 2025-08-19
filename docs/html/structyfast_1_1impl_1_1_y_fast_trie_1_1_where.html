@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.1</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.2</span>
    </div>
   </td>
  </tr>
@@ -92,16 +92,70 @@ $(function(){initNavTree('structyfast_1_1impl_1_1_y_fast_trie_1_1_where.html',''
   <div class="headertitle"><div class="title">yfast::impl::YFastTrie&lt; Leaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::Where Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="impl_2yfast_8h_source.html">yfast.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a7ecdc726a879f7fe640cb7f14931d8ae" id="r_a7ecdc726a879f7fe640cb7f14931d8ae"><td class="memItemLeft" align="right" valign="top"><a id="a7ecdc726a879f7fe640cb7f14931d8ae" name="a7ecdc726a879f7fe640cb7f14931d8ae"></a>
-const <a class="el" href="classyfast_1_1impl_1_1_y_fast_trie.html">YFastTrie</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>trie</b></td></tr>
-<tr class="memitem:a86ee41577cd463a73e5619e2cc422300" id="r_a86ee41577cd463a73e5619e2cc422300"><td class="memItemLeft" align="right" valign="top"><a id="a86ee41577cd463a73e5619e2cc422300" name="a86ee41577cd463a73e5619e2cc422300"></a>
-<a class="el" href="structyfast_1_1internal_1_1_x_fast_leaf.html">XFastLeaf</a> *&#160;</td><td class="memItemRight" valign="bottom"><b>xleaf</b></td></tr>
-<tr class="memitem:ac5033e99a2a800a385aac6d38f4d14e8" id="r_ac5033e99a2a800a385aac6d38f4d14e8"><td class="memItemLeft" align="right" valign="top"><a id="ac5033e99a2a800a385aac6d38f4d14e8" name="ac5033e99a2a800a385aac6d38f4d14e8"></a>
-Leaf *&#160;</td><td class="memItemRight" valign="bottom"><b>leaf</b></td></tr>
+<tr class="memitem:a7ecdc726a879f7fe640cb7f14931d8ae" id="r_a7ecdc726a879f7fe640cb7f14931d8ae"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classyfast_1_1impl_1_1_y_fast_trie.html">YFastTrie</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7ecdc726a879f7fe640cb7f14931d8ae">trie</a></td></tr>
+<tr class="memitem:a86ee41577cd463a73e5619e2cc422300" id="r_a86ee41577cd463a73e5619e2cc422300"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structyfast_1_1internal_1_1_x_fast_leaf.html">XFastLeaf</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a86ee41577cd463a73e5619e2cc422300">xleaf</a></td></tr>
+<tr class="memitem:ac5033e99a2a800a385aac6d38f4d14e8" id="r_ac5033e99a2a800a385aac6d38f4d14e8"><td class="memItemLeft" align="right" valign="top">Leaf *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac5033e99a2a800a385aac6d38f4d14e8">leaf</a></td></tr>
 </table>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><div class="compoundTemplParams">template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typename Leaf::Key &gt; BitExtractor = internal::BitExtractor&lt;typename Leaf::Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;typename Leaf::Key&gt;, typename ArbitraryAllocator = std::allocator&lt;typename Leaf::Key&gt;&gt;<br />
+struct yfast::impl::YFastTrie&lt; Leaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::Where</div><p>location in the y-fast trie </p>
+</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="ac5033e99a2a800a385aac6d38f4d14e8" name="ac5033e99a2a800a385aac6d38f4d14e8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac5033e99a2a800a385aac6d38f4d14e8">&#9670;&#160;</a></span>leaf</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typename Leaf::Key &gt; BitExtractor = internal::BitExtractor&lt;typename Leaf::Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;typename Leaf::Key&gt;, typename ArbitraryAllocator = std::allocator&lt;typename Leaf::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Leaf* <a class="el" href="classyfast_1_1impl_1_1_y_fast_trie.html">yfast::impl::YFastTrie</a>&lt; Leaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::Where::leaf</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>pointer to the leaf in the underlying <a class="el" href="classyfast_1_1impl_1_1_a_v_l.html">AVL</a> tree </p>
+
+</div>
+</div>
+<a id="a7ecdc726a879f7fe640cb7f14931d8ae" name="a7ecdc726a879f7fe640cb7f14931d8ae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7ecdc726a879f7fe640cb7f14931d8ae">&#9670;&#160;</a></span>trie</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typename Leaf::Key &gt; BitExtractor = internal::BitExtractor&lt;typename Leaf::Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;typename Leaf::Key&gt;, typename ArbitraryAllocator = std::allocator&lt;typename Leaf::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classyfast_1_1impl_1_1_y_fast_trie.html">YFastTrie</a>* <a class="el" href="classyfast_1_1impl_1_1_y_fast_trie.html">yfast::impl::YFastTrie</a>&lt; Leaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::Where::trie</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>pointer to the y-fast trie </p>
+
+</div>
+</div>
+<a id="a86ee41577cd463a73e5619e2cc422300" name="a86ee41577cd463a73e5619e2cc422300"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86ee41577cd463a73e5619e2cc422300">&#9670;&#160;</a></span>xleaf</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typename Leaf::Key &gt; BitExtractor = internal::BitExtractor&lt;typename Leaf::Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;typename Leaf::Key&gt;, typename ArbitraryAllocator = std::allocator&lt;typename Leaf::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structyfast_1_1internal_1_1_x_fast_leaf.html">XFastLeaf</a>* <a class="el" href="classyfast_1_1impl_1_1_y_fast_trie.html">yfast::impl::YFastTrie</a>&lt; Leaf, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::Where::xleaf</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>pointer to the leaf in the underlying x-fast trie </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/yfast/impl/<a class="el" href="impl_2yfast_8h_source.html">yfast.h</a></li>
 </ul>

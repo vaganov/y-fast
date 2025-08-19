@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.1</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.2</span>
    </div>
   </td>
  </tr>
@@ -92,18 +92,88 @@ $(function(){initNavTree('structyfast_1_1impl_1_1_b_s_t_1_1_remove_report.html',
   <div class="headertitle"><div class="title">yfast::impl::BST&lt; Node, Compare &gt;::RemoveReport Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="impl_2bst_8h_source.html">bst.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:abace6c490ab87546a180c6d90718092a" id="r_abace6c490ab87546a180c6d90718092a"><td class="memItemLeft" align="right" valign="top"><a id="abace6c490ab87546a180c6d90718092a" name="abace6c490ab87546a180c6d90718092a"></a>
-Node *&#160;</td><td class="memItemRight" valign="bottom"><b>substitution</b></td></tr>
-<tr class="memitem:ab5666829a4fbf663bc0ba191fcc19a38" id="r_ab5666829a4fbf663bc0ba191fcc19a38"><td class="memItemLeft" align="right" valign="top"><a id="ab5666829a4fbf663bc0ba191fcc19a38" name="ab5666829a4fbf663bc0ba191fcc19a38"></a>
-Node *&#160;</td><td class="memItemRight" valign="bottom"><b>subtree_parent</b></td></tr>
-<tr class="memitem:a022bf4bf3dac4a5e7500c3bdb3d003b3" id="r_a022bf4bf3dac4a5e7500c3bdb3d003b3"><td class="memItemLeft" align="right" valign="top"><a id="a022bf4bf3dac4a5e7500c3bdb3d003b3" name="a022bf4bf3dac4a5e7500c3bdb3d003b3"></a>
-Node *&#160;</td><td class="memItemRight" valign="bottom"><b>subtree_child</b></td></tr>
-<tr class="memitem:ab78db14699a0a64d5396e880e81f3c53" id="r_ab78db14699a0a64d5396e880e81f3c53"><td class="memItemLeft" align="right" valign="top"><a id="ab78db14699a0a64d5396e880e81f3c53" name="ab78db14699a0a64d5396e880e81f3c53"></a>
-bool&#160;</td><td class="memItemRight" valign="bottom"><b>is_left_child</b></td></tr>
+<tr class="memitem:abace6c490ab87546a180c6d90718092a" id="r_abace6c490ab87546a180c6d90718092a"><td class="memItemLeft" align="right" valign="top">Node *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abace6c490ab87546a180c6d90718092a">substitution</a></td></tr>
+<tr class="memitem:ab5666829a4fbf663bc0ba191fcc19a38" id="r_ab5666829a4fbf663bc0ba191fcc19a38"><td class="memItemLeft" align="right" valign="top">Node *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab5666829a4fbf663bc0ba191fcc19a38">subtree_parent</a></td></tr>
+<tr class="memitem:a022bf4bf3dac4a5e7500c3bdb3d003b3" id="r_a022bf4bf3dac4a5e7500c3bdb3d003b3"><td class="memItemLeft" align="right" valign="top">Node *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a022bf4bf3dac4a5e7500c3bdb3d003b3">subtree_child</a></td></tr>
+<tr class="memitem:ab78db14699a0a64d5396e880e81f3c53" id="r_ab78db14699a0a64d5396e880e81f3c53"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab78db14699a0a64d5396e880e81f3c53">is_left_child</a></td></tr>
 </table>
+<a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
+<div class="textblock"><div class="compoundTemplParams">template&lt;typename Node, typename Compare = std::less&lt;typename Node::Key&gt;&gt;<br />
+struct yfast::impl::BST&lt; Node, Compare &gt;::RemoveReport</div><p>structure returned by the <em class="arg"><a class="el" href="classyfast_1_1impl_1_1_b_s_t.html#a9de0065f9aaf15361cf92859f46f5d29">remove()</a></em> method </p>
+</div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="ab78db14699a0a64d5396e880e81f3c53" name="ab78db14699a0a64d5396e880e81f3c53"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab78db14699a0a64d5396e880e81f3c53">&#9670;&#160;</a></span>is_left_child</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Node, typename Compare = std::less&lt;typename Node::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="classyfast_1_1impl_1_1_b_s_t.html">yfast::impl::BST</a>&lt; Node, Compare &gt;::RemoveReport::is_left_child</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>whether <em class="arg">subtree_child</em> is the left child; NB: only makes sense if <em class="arg">subtree_parent</em> != <em class="arg">nullptr</em> </p>
+
+</div>
+</div>
+<a id="abace6c490ab87546a180c6d90718092a" name="abace6c490ab87546a180c6d90718092a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abace6c490ab87546a180c6d90718092a">&#9670;&#160;</a></span>substitution</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Node, typename Compare = std::less&lt;typename Node::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Node* <a class="el" href="classyfast_1_1impl_1_1_b_s_t.html">yfast::impl::BST</a>&lt; Node, Compare &gt;::RemoveReport::substitution</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>substitution node: will have the same parent as the removed node had </p>
+
+</div>
+</div>
+<a id="a022bf4bf3dac4a5e7500c3bdb3d003b3" name="a022bf4bf3dac4a5e7500c3bdb3d003b3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a022bf4bf3dac4a5e7500c3bdb3d003b3">&#9670;&#160;</a></span>subtree_child</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Node, typename Compare = std::less&lt;typename Node::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Node* <a class="el" href="classyfast_1_1impl_1_1_b_s_t.html">yfast::impl::BST</a>&lt; Node, Compare &gt;::RemoveReport::subtree_child</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>root of the modified subtree: the topmost node with height unchanged </p>
+
+</div>
+</div>
+<a id="ab5666829a4fbf663bc0ba191fcc19a38" name="ab5666829a4fbf663bc0ba191fcc19a38"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab5666829a4fbf663bc0ba191fcc19a38">&#9670;&#160;</a></span>subtree_parent</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Node, typename Compare = std::less&lt;typename Node::Key&gt;&gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">Node* <a class="el" href="classyfast_1_1impl_1_1_b_s_t.html">yfast::impl::BST</a>&lt; Node, Compare &gt;::RemoveReport::subtree_parent</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>parent of the modified subtree: the bottommost node with height changed </p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/yfast/impl/<a class="el" href="impl_2bst_8h_source.html">bst.h</a></li>
 </ul>

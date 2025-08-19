@@ -1,4 +1,6 @@
 var searchData=
 [
-  ['upper_5fbound_0',['upper_bound',['../classyfast_1_1fastmap.html#a62500d565d68cec4917d34b4866333cd',1,'yfast::fastmap::upper_bound(const Key &amp;key)'],['../classyfast_1_1fastmap.html#af4a9dabe63113cd14113f55d6a52694f',1,'yfast::fastmap::upper_bound(const Key &amp;key) const']]]
+  ['size_0',['size',['../classyfast_1_1fastmap.html#a9e69b4b68894e84767335e794d733675',1,'yfast::fastmap::size()'],['../classyfast_1_1impl_1_1_b_s_t.html#a3fcd7169ba651004038ffcecad9343a8',1,'yfast::impl::BST::size()'],['../classyfast_1_1impl_1_1_x_fast_trie.html#a01eba6d384038b7a6e33afa095f80e24',1,'yfast::impl::XFastTrie::size()'],['../classyfast_1_1impl_1_1_y_fast_trie.html#a0a64f2e06694b4bb1cb6ca97be74c5f0',1,'yfast::impl::YFastTrie::size()']]],
+  ['split_1',['split',['../classyfast_1_1impl_1_1_a_v_l.html#a695dc2f185dfe9b529f9052c1c743756',1,'yfast::impl::AVL']]],
+  ['succ_2',['succ',['../classyfast_1_1fastmap.html#a3a7df7697b7ea8b2e6991d8074961ff0',1,'yfast::fastmap::succ(const Key &amp;key, bool strict=false)'],['../classyfast_1_1fastmap.html#aeaa76bb5021f04026d256fd56c23a32e',1,'yfast::fastmap::succ(const Key &amp;key, bool strict=false) const'],['../classyfast_1_1impl_1_1_b_s_t.html#ae3036f3210b2acb9051df6aef642cb8f',1,'yfast::impl::BST::succ()'],['../classyfast_1_1impl_1_1_x_fast_trie.html#a8f4f731117a2871ce0d8a406a01a13c1',1,'yfast::impl::XFastTrie::succ()'],['../classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767',1,'yfast::impl::YFastTrie::succ()']]]
 ];

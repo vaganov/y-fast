@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['where_0',['Where',['../structyfast_1_1impl_1_1_y_fast_trie_1_1_where.html',1,'yfast::impl::YFastTrie']]]
+  ['value_5ftype_0',['value_type',['../classyfast_1_1fastmap.html#af4cae4d1eda7c372a3bc094fb97ba22a',1,'yfast::fastmap']]]
 ];

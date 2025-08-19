@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['rbegin_0',['rbegin',['../classyfast_1_1fastmap.html#a863654ad75d1f748db1c9088646b7ec6',1,'yfast::fastmap::rbegin()'],['../classyfast_1_1fastmap.html#a23e66f3c7103e5e970d14a3b152ee08d',1,'yfast::fastmap::rbegin() const']]],
-  ['rend_1',['rend',['../classyfast_1_1fastmap.html#ad17538df5eb747932e1074307a4dd8fc',1,'yfast::fastmap::rend()'],['../classyfast_1_1fastmap.html#a4ae3e9923db4af7394b8f020f4ea1ac1',1,'yfast::fastmap::rend() const']]]
+  ['pred_0',['pred',['../classyfast_1_1fastmap.html#a6b8f6a3ce1ef6a06da558c625147ec92',1,'yfast::fastmap::pred(const Key &amp;key, bool strict=false)'],['../classyfast_1_1fastmap.html#af8c9078be09349ba038e926c2db79d29',1,'yfast::fastmap::pred(const Key &amp;key, bool strict=false) const'],['../classyfast_1_1impl_1_1_b_s_t.html#a07d7df2f80351a24b81f99cd0075837e',1,'yfast::impl::BST::pred()'],['../classyfast_1_1impl_1_1_x_fast_trie.html#a2de5673089d89a2bff8b21c1731e4203',1,'yfast::impl::XFastTrie::pred()'],['../classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10',1,'yfast::impl::YFastTrie::pred()']]]
 ];

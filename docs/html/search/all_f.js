@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['upper_5fbound_0',['upper_bound',['../classyfast_1_1fastmap.html#a62500d565d68cec4917d34b4866333cd',1,'yfast::fastmap::upper_bound(const Key &amp;key)'],['../classyfast_1_1fastmap.html#af4a9dabe63113cd14113f55d6a52694f',1,'yfast::fastmap::upper_bound(const Key &amp;key) const']]]
+  ['trie_0',['trie',['../structyfast_1_1impl_1_1_y_fast_trie_1_1_where.html#a7ecdc726a879f7fe640cb7f14931d8ae',1,'yfast::impl::YFastTrie::Where']]],
+  ['type_1',['Type',['../structyfast_1_1utils_1_1_maybe_const.html',1,'yfast::utils']]]
 ];
