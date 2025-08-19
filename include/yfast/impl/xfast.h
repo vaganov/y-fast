@@ -13,7 +13,7 @@ namespace yfast::impl {
 
 /**
  * <a href="https://en.wikipedia.org/wiki/X-fast_trie">x-fast trie</a> implementation
- * @tparam Leaf lower level leaf type
+ * @tparam Leaf leaf type
  * @tparam H key length in bits
  * @tparam BitExtractor helper type to provide key shifts and bit extractions
  * @tparam Hash map from shifted keys to \a std::uintptr_t
@@ -28,6 +28,9 @@ template <
 >
 class XFastTrie {
 public:
+    /**
+     * leaf key type
+     */
     typedef typename Leaf::Key Key;
 
 protected:
@@ -58,9 +61,26 @@ public:
         other._rightmost = nullptr;
     }
 
+    /**
+     * @return the number of leaves in the trie
+     */
+    [[nodiscard]] std::size_t size() const { return _hash[0].size(); }
+
+    /**
+     * @return pointer to the leaf with the minimal key in the trie
+     */
     Leaf* leftmost() const { return _leftmost; }
+
+    /**
+     * @return pointer to the leaf with the maximal key in the trie
+     */
     Leaf* rightmost() const { return _rightmost; }
 
+    /**
+     * find a leaf with an equal key
+     * @param key key to find
+     * @return pointer to the leaf with the key equal to \a key or \a nullptr
+     */
     Leaf* find(const Key& key) const {
         auto key_ = _bx.shift(key, 0);
         if (_hash[0].contains(key_)) {
@@ -69,6 +89,12 @@ public:
         return nullptr;
     }
 
+    /**
+     * find a predecessor leaf for a key
+     * @param key key
+     * @param strict whether a leaf with the key strictly less than \a key should be returned
+     * @return pointer to the leaf with the maximal key either not greater or strictly less than \a key
+     */
     Leaf* pred(const Key& key, bool strict = false) const {
         auto [guess, missed, level] = approx(key);
         switch (missed) {
@@ -83,6 +109,12 @@ public:
         }
     }
 
+    /**
+     * find a successor leaf for a key
+     * @param key key
+     * @param strict whether a leaf with the key strictly greater than \a key should be returned
+     * @return pointer to the leaf with the minimal key either not less or strictly greater than \a key
+     */
     Leaf* succ(const Key& key, bool strict = false) const {
         auto [guess, missed, level] = approx(key);
         switch (missed) {
@@ -97,6 +129,10 @@ public:
         }
     }
 
+    /**
+     * insert a new leaf
+     * @param leaf leaf to insert
+     */
     void insert(Leaf* leaf) {
         Leaf* prv;
         Leaf* nxt;
@@ -204,6 +240,10 @@ public:
         }
     }
 
+    /**
+     * remove a leaf from the trie
+     * @param leaf leaf to remove; undefined behavior if not in the trie; leaf is neither deallocated nor destroyed
+     */
     void remove(Leaf* leaf) {
         auto prv = leaf->prv;
         auto nxt = leaf->nxt;
@@ -297,6 +337,9 @@ public:
         }
     }
 
+    /**
+     * remove all the internal nodes; leaves are neither deallocated nor destroyed
+     */
     void clear() {
         for (unsigned int h = 0; h < H; ++h) {
             _hash[h].clear();

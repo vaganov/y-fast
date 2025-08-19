@@ -17,9 +17,21 @@ class AVL: public BST<Node, Compare> {
 public:
     using typename BST<Node, Compare>::Key;
 
+    /**
+     * structure returned by the \a split() method
+     */
     typedef struct {
+        /**
+         * left (the lesser) subtree
+         */
         AVL left;
+        /**
+         * right (the greater) subtree
+         */
         AVL right;
+        /**
+         * pointer to the node with maximal key in the left subtree
+         */
         Node* left_max;
     } SplitResult;
 
@@ -32,6 +44,9 @@ public:
     AVL(const AVL& other) = delete;
     AVL(AVL&& other) noexcept: BST<Node, Compare>(std::move(other)) {}
 
+    /**
+     * @return the height of the tree
+     */
     [[nodiscard]] unsigned int height() const { return height(_root); }
 
     /**
@@ -118,7 +133,11 @@ public:
         return nullptr;
     }
 
-    Node* remove(Node* node) {
+    /**
+     * remove a node from the tree
+     * @param node node to remove; undefined behavior if not in the tree
+     */
+    void remove(Node* node) {
         auto remove_report = this->template BST<Node, Compare>::remove(node);
         auto substitution = remove_report.substitution;
         auto new_subroot = remove_report.subtree_child;
@@ -209,9 +228,12 @@ public:
             }
             parent = grand_parent;
         }
-        return node;
     }
 
+    /**
+     * split the tree by the root; insert the root into the left subtree
+     * @return \a SplitResult structure
+     */
     SplitResult split() {  // TODO: split by specified node
         if (_root == nullptr) {
             return { AVL(_cmp), AVL(_cmp), nullptr };
@@ -225,6 +247,11 @@ public:
         return split_result;
     }
 
+    /**
+     * merge two trees \n
+     * undefined behavior unless the maximal key in either tree is less than the minimal key in the other
+     * @return merged tree
+     */
     static AVL merge(AVL&& subtree1, AVL&& subtree2) {
         auto first_is_less = subtree1._cmp(subtree1._root->key, subtree2._root->key);
         auto& left = first_is_less ? subtree1 : subtree2;
@@ -234,6 +261,7 @@ public:
         new_subroot->parent = nullptr;
         const auto left_height = left.height();
         const auto right_height = right.height();
+
         if (left_height > right_height + 1) {
             auto probe = _rightmost(left._root);
             int probe_height = height(probe);
@@ -306,6 +334,7 @@ public:
             right._root = nullptr;
             return std::move(left);
         }
+
         if (right_height > left_height + 1) {
             auto probe = _leftmost(right._root);
             int probe_height = height(probe);
