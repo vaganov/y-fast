@@ -329,9 +329,12 @@ public:
      * remove all the internal nodes; leaves are neither deallocated nor destroyed
      */
     void clear() {
-        for (auto xleaf = _trie.leftmost(); xleaf != nullptr; xleaf = xleaf->nxt) {
+        auto xleaf = _trie.leftmost();
+        while (xleaf != nullptr) {
+            auto nxt = xleaf->nxt;
             std::allocator_traits<Alloc>::destroy(_alloc, xleaf);
             std::allocator_traits<Alloc>::deallocate(_alloc, xleaf, 1);
+            xleaf = nxt;
         }
         _trie.clear();
         _size = 0;
