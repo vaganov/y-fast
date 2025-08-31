@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.2</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;1.0.0</span>
    </div>
   </td>
  </tr>
@@ -117,7 +117,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af15632fe4905361670bca78445ad6bfb" id="r_af15632fe4905361670bca78445ad6bfb"><td class="memItemLeft" align="right" valign="top">Leaf *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af15632fe4905361670bca78445ad6bfb">find</a> (const <a class="el" href="#a7f96b8fde97162ce0c9f8d6d3c0d3821">Key</a> &amp;key) const</td></tr>
 <tr class="memitem:a2de5673089d89a2bff8b21c1731e4203" id="r_a2de5673089d89a2bff8b21c1731e4203"><td class="memItemLeft" align="right" valign="top">Leaf *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2de5673089d89a2bff8b21c1731e4203">pred</a> (const <a class="el" href="#a7f96b8fde97162ce0c9f8d6d3c0d3821">Key</a> &amp;key, bool strict=false) const</td></tr>
 <tr class="memitem:a8f4f731117a2871ce0d8a406a01a13c1" id="r_a8f4f731117a2871ce0d8a406a01a13c1"><td class="memItemLeft" align="right" valign="top">Leaf *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8f4f731117a2871ce0d8a406a01a13c1">succ</a> (const <a class="el" href="#a7f96b8fde97162ce0c9f8d6d3c0d3821">Key</a> &amp;key, bool strict=false) const</td></tr>
-<tr class="memitem:a7f85c2b53684352fd207fbd46220f5b9" id="r_a7f85c2b53684352fd207fbd46220f5b9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f85c2b53684352fd207fbd46220f5b9">insert</a> (Leaf *leaf)</td></tr>
+<tr class="memitem:a35bb6f95fe68a6c9e7fa90d4c5962eca" id="r_a35bb6f95fe68a6c9e7fa90d4c5962eca"><td class="memItemLeft" align="right" valign="top">Leaf *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a35bb6f95fe68a6c9e7fa90d4c5962eca">insert</a> (Leaf *leaf)</td></tr>
 <tr class="memitem:aebd29ad7fb11533b57fcb90897f203a3" id="r_aebd29ad7fb11533b57fcb90897f203a3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aebd29ad7fb11533b57fcb90897f203a3">remove</a> (Leaf *leaf)</td></tr>
 <tr class="memitem:a2d514a58629a6b3bcfb0601a53f6d0e0" id="r_a2d514a58629a6b3bcfb0601a53f6d0e0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d514a58629a6b3bcfb0601a53f6d0e0">clear</a> ()</td></tr>
 </table><table class="memberdecls">
@@ -224,8 +224,8 @@ template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typ
 
 </div>
 </div>
-<a id="a7f85c2b53684352fd207fbd46220f5b9" name="a7f85c2b53684352fd207fbd46220f5b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7f85c2b53684352fd207fbd46220f5b9">&#9670;&#160;</a></span>insert()</h2>
+<a id="a35bb6f95fe68a6c9e7fa90d4c5962eca" name="a35bb6f95fe68a6c9e7fa90d4c5962eca"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a35bb6f95fe68a6c9e7fa90d4c5962eca">&#9670;&#160;</a></span>insert()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -236,7 +236,7 @@ template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typ
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classyfast_1_1impl_1_1_x_fast_trie.html">yfast::impl::XFastTrie</a>&lt; Leaf, H, BitExtractor, Hash, Compare &gt;::insert </td>
+          <td class="memname">Leaf * <a class="el" href="classyfast_1_1impl_1_1_x_fast_trie.html">yfast::impl::XFastTrie</a>&lt; Leaf, H, BitExtractor, Hash, Compare &gt;::insert </td>
           <td>(</td>
           <td class="paramtype">Leaf *</td>          <td class="paramname"><span class="paramname"><em>leaf</em></span></td><td>)</td>
           <td></td>
@@ -248,12 +248,13 @@ template&lt;typename Leaf, unsigned int H, internal::BitExtractorGeneric&lt; typ
   </tr>
 </table>
 </div><div class="memdoc">
-<p>insert a new leaf </p><dl class="params"><dt>Parameters</dt><dd>
+<p>insert a new leaf, replacing leaf with the equal key (if any) </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">leaf</td><td>leaf to insert </td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>leaf being replaced or <em class="arg">nullptr</em> </dd></dl>
 
 </div>
 </div>

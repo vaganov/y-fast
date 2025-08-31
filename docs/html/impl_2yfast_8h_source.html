@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.2</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;1.0.0</span>
    </div>
   </td>
  </tr>
@@ -371,48 +371,51 @@ $(function(){initNavTree('impl_2yfast_8h_source.html','',''); });
 <div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span></div>
 <div class="foldopen" id="foldopen00331" data-start="{" data-end="}">
 <div class="line"><a id="l00331" name="l00331"></a><span class="lineno"><a class="line" href="classyfast_1_1impl_1_1_y_fast_trie.html#aff5f87640ad7215b97a04d3614fbf952">  331</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aff5f87640ad7215b97a04d3614fbf952">clear</a>() {</div>
-<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> xleaf = _trie.leftmost(); xleaf != <span class="keyword">nullptr</span>; xleaf = xleaf-&gt;nxt) {</div>
-<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>            std::allocator_traits&lt;Alloc&gt;::destroy(_alloc, xleaf);</div>
-<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>            std::allocator_traits&lt;Alloc&gt;::deallocate(_alloc, xleaf, 1);</div>
-<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>        }</div>
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>        _trie.clear();</div>
-<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>        _size = 0;</div>
-<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>        _rebuilds = 0;</div>
-<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>    }</div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span>        <span class="keyword">auto</span> xleaf = _trie.leftmost();</div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span>        <span class="keywordflow">while</span> (xleaf != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>            <span class="keyword">auto</span> nxt = xleaf-&gt;nxt;</div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>            std::allocator_traits&lt;Alloc&gt;::destroy(_alloc, xleaf);</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno">  336</span>            std::allocator_traits&lt;Alloc&gt;::deallocate(_alloc, xleaf, 1);</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>            xleaf = nxt;</div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>        }</div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>        _trie.clear();</div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>        _size = 0;</div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>        _rebuilds = 0;</div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>    }</div>
 </div>
-<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span> </div>
-<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span><span class="keyword">private</span>:</div>
-<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>    <span class="keyword">static</span> XFastLeaf* pick_neighbor(XFastLeaf* xleaf) {</div>
-<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>        <span class="keyword">auto</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> = xleaf-&gt;prv;</div>
-<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>        <span class="keyword">auto</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a> = xleaf-&gt;nxt;</div>
-<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> != <span class="keyword">nullptr</span> &amp;&amp; <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a> != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>            <span class="keyword">auto</span> pred_merge_size = <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a>-&gt;value.size() + xleaf-&gt;value.size();</div>
-<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>            <span class="keyword">auto</span> succ_merge_size = <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>-&gt;value.size() + xleaf-&gt;value.size();</div>
-<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>            <span class="keywordflow">if</span> (pred_merge_size &lt;= TREE_SPLIT_THRESHOLD &amp;&amp; succ_merge_size &lt;= TREE_SPLIT_THRESHOLD) {</div>
-<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>                <span class="keywordflow">return</span> pred_merge_size &lt; succ_merge_size ? <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> : <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
-<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>            }</div>
-<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>            <span class="keywordflow">if</span> (pred_merge_size &lt;= TREE_SPLIT_THRESHOLD) {</div>
-<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span>                <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a>;</div>
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span> </div>
+<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span><span class="keyword">private</span>:</div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>    <span class="keyword">static</span> XFastLeaf* pick_neighbor(XFastLeaf* xleaf) {</div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>        <span class="keyword">auto</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> = xleaf-&gt;prv;</div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>        <span class="keyword">auto</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a> = xleaf-&gt;nxt;</div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> != <span class="keyword">nullptr</span> &amp;&amp; <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a> != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>            <span class="keyword">auto</span> pred_merge_size = <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a>-&gt;value.size() + xleaf-&gt;value.size();</div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>            <span class="keyword">auto</span> succ_merge_size = <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>-&gt;value.size() + xleaf-&gt;value.size();</div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span>            <span class="keywordflow">if</span> (pred_merge_size &lt;= TREE_SPLIT_THRESHOLD &amp;&amp; succ_merge_size &lt;= TREE_SPLIT_THRESHOLD) {</div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span>                <span class="keywordflow">return</span> pred_merge_size &lt; succ_merge_size ? <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> : <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
 <div class="line"><a id="l00353" name="l00353"></a><span class="lineno">  353</span>            }</div>
-<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>            <span class="keywordflow">if</span> (succ_merge_size &lt;= TREE_SPLIT_THRESHOLD) {</div>
-<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span>                <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
+<div class="line"><a id="l00354" name="l00354"></a><span class="lineno">  354</span>            <span class="keywordflow">if</span> (pred_merge_size &lt;= TREE_SPLIT_THRESHOLD) {</div>
+<div class="line"><a id="l00355" name="l00355"></a><span class="lineno">  355</span>                <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a>;</div>
 <div class="line"><a id="l00356" name="l00356"></a><span class="lineno">  356</span>            }</div>
-<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>            <span class="keywordflow">return</span> pred_merge_size &gt; succ_merge_size ? <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> : <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
-<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>        }</div>
-<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a>;</div>
+<div class="line"><a id="l00357" name="l00357"></a><span class="lineno">  357</span>            <span class="keywordflow">if</span> (succ_merge_size &lt;= TREE_SPLIT_THRESHOLD) {</div>
+<div class="line"><a id="l00358" name="l00358"></a><span class="lineno">  358</span>                <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
+<div class="line"><a id="l00359" name="l00359"></a><span class="lineno">  359</span>            }</div>
+<div class="line"><a id="l00360" name="l00360"></a><span class="lineno">  360</span>            <span class="keywordflow">return</span> pred_merge_size &gt; succ_merge_size ? <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> : <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
 <div class="line"><a id="l00361" name="l00361"></a><span class="lineno">  361</span>        }</div>
-<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a> != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
+<div class="line"><a id="l00362" name="l00362"></a><span class="lineno">  362</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a> != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><a id="l00363" name="l00363"></a><span class="lineno">  363</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#aa071af98a3deb1141836f1da004aed10">pred</a>;</div>
 <div class="line"><a id="l00364" name="l00364"></a><span class="lineno">  364</span>        }</div>
-<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>        <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>    }</div>
-<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>};</div>
+<div class="line"><a id="l00365" name="l00365"></a><span class="lineno">  365</span>        <span class="keywordflow">if</span> (<a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a> != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><a id="l00366" name="l00366"></a><span class="lineno">  366</span>            <span class="keywordflow">return</span> <a class="code hl_function" href="classyfast_1_1impl_1_1_y_fast_trie.html#acc696b223085e9f576157e27399b8767">succ</a>;</div>
+<div class="line"><a id="l00367" name="l00367"></a><span class="lineno">  367</span>        }</div>
+<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span>        <span class="keywordflow">return</span> <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>    }</div>
+<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span>};</div>
 </div>
-<div class="line"><a id="l00368" name="l00368"></a><span class="lineno">  368</span> </div>
-<div class="line"><a id="l00369" name="l00369"></a><span class="lineno">  369</span>}</div>
-<div class="line"><a id="l00370" name="l00370"></a><span class="lineno">  370</span> </div>
-<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00371" name="l00371"></a><span class="lineno">  371</span> </div>
+<div class="line"><a id="l00372" name="l00372"></a><span class="lineno">  372</span>}</div>
+<div class="line"><a id="l00373" name="l00373"></a><span class="lineno">  373</span> </div>
+<div class="line"><a id="l00374" name="l00374"></a><span class="lineno">  374</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclassyfast_1_1impl_1_1_a_v_l_html"><div class="ttname"><a href="classyfast_1_1impl_1_1_a_v_l.html">yfast::impl::AVL</a></div><div class="ttdef"><b>Definition</b> avl.h:16</div></div>
 <div class="ttc" id="aclassyfast_1_1impl_1_1_a_v_l_html_a695dc2f185dfe9b529f9052c1c743756"><div class="ttname"><a href="classyfast_1_1impl_1_1_a_v_l.html#a695dc2f185dfe9b529f9052c1c743756">yfast::impl::AVL::split</a></div><div class="ttdeci">SplitResult split()</div><div class="ttdef"><b>Definition</b> avl.h:237</div></div>
 <div class="ttc" id="aclassyfast_1_1impl_1_1_a_v_l_html_a89eef6d0b1572fd48d0dcabe4ae0cdb6"><div class="ttname"><a href="classyfast_1_1impl_1_1_a_v_l.html#a89eef6d0b1572fd48d0dcabe4ae0cdb6">yfast::impl::AVL::insert</a></div><div class="ttdeci">Node * insert(Node *node)</div><div class="ttdef"><b>Definition</b> avl.h:57</div></div>

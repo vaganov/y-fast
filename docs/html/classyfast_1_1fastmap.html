@@ -27,7 +27,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">yfast<span id="projectnumber">&#160;0.6.2</span>
+   <div id="projectname">yfast<span id="projectnumber">&#160;1.0.0</span>
    </div>
   </td>
  </tr>
@@ -145,8 +145,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0058e6a59b0e84aea7b6cd3767b6f624" id="r_a0058e6a59b0e84aea7b6cd3767b6f624"><td class="memItemLeft" align="right" valign="top">const_iterator::value_type &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0058e6a59b0e84aea7b6cd3767b6f624">at</a> (const Key &amp;key) const</td></tr>
 <tr class="memitem:a1921d075ed80a36cd111b617f1bb5b62" id="r_a1921d075ed80a36cd111b617f1bb5b62"><td class="memTemplParams" colspan="2">template&lt;typename ... Args&gt; </td></tr>
 <tr class="memitem:a1921d075ed80a36cd111b617f1bb5b62 template"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classyfast_1_1fastmap_1_1iterator.html">iterator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1921d075ed80a36cd111b617f1bb5b62">insert</a> (const Key &amp;key, Args ... args)</td></tr>
-<tr class="memitem:a57312289db17946afad24844a9b5016a" id="r_a57312289db17946afad24844a9b5016a"><td class="memTemplParams" colspan="2">template&lt;typename Iterator&gt; </td></tr>
-<tr class="memitem:a57312289db17946afad24844a9b5016a template"><td class="memItemLeft" align="right" valign="top">Iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a57312289db17946afad24844a9b5016a">erase</a> (const Iterator &amp;i)</td></tr>
+<tr class="memitem:a2aed20db1af2b99a78e60511c69508c9" id="r_a2aed20db1af2b99a78e60511c69508c9"><td class="memTemplParams" colspan="2">template&lt;typename Iterator, typename = std::enable_if_t&lt;std::is_base_of_v&lt;typename YFastTrie::Where, Iterator&gt;&gt;&gt; </td></tr>
+<tr class="memitem:a2aed20db1af2b99a78e60511c69508c9 template"><td class="memItemLeft" align="right" valign="top">Iterator&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2aed20db1af2b99a78e60511c69508c9">erase</a> (Iterator i)</td></tr>
 <tr class="memitem:acbb68815d7e40f3b0956c9c9ed2d6b88" id="r_acbb68815d7e40f3b0956c9c9ed2d6b88"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbb68815d7e40f3b0956c9c9ed2d6b88">erase</a> (const Key &amp;key)</td></tr>
 <tr class="memitem:a0eccf77782fb942c6d22c69f12f76741" id="r_a0eccf77782fb942c6d22c69f12f76741"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0eccf77782fb942c6d22c69f12f76741">clear</a> ()</td></tr>
 </table><table class="memberdecls">
@@ -518,44 +518,8 @@ template&lt;typename Key, typename Value, unsigned int H, internal::BitExtractor
 
 </div>
 </div>
-<a id="a57312289db17946afad24844a9b5016a" name="a57312289db17946afad24844a9b5016a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a57312289db17946afad24844a9b5016a">&#9670;&#160;</a></span>erase() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric&lt; Key &gt; BitExtractor = internal::BitExtractor&lt;Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;Key&gt;, typename ArbitraryAllocator = std::allocator&lt;Key&gt;&gt; </div>
-<div class="memtemplate">
-template&lt;typename Iterator&gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">Iterator <a class="el" href="classyfast_1_1fastmap.html">yfast::fastmap</a>&lt; Key, Value, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::erase </td>
-          <td>(</td>
-          <td class="paramtype">const Iterator &amp;</td>          <td class="paramname"><span class="paramname"><em>i</em></span></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>erase entry by iterator </p><dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">i</td><td>iterator (may be a const iterator and/or a reverse iterator) </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>iterator following the removed entry with respect to the iterator direction </dd></dl>
-
-</div>
-</div>
 <a id="acbb68815d7e40f3b0956c9c9ed2d6b88" name="acbb68815d7e40f3b0956c9c9ed2d6b88"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acbb68815d7e40f3b0956c9c9ed2d6b88">&#9670;&#160;</a></span>erase() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#acbb68815d7e40f3b0956c9c9ed2d6b88">&#9670;&#160;</a></span>erase() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -585,6 +549,42 @@ template&lt;typename Key, typename Value, unsigned int H, internal::BitExtractor
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><em class="arg">true</em> if the entry has been found and erased or <em class="arg">false</em> otherwise </dd></dl>
+
+</div>
+</div>
+<a id="a2aed20db1af2b99a78e60511c69508c9" name="a2aed20db1af2b99a78e60511c69508c9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2aed20db1af2b99a78e60511c69508c9">&#9670;&#160;</a></span>erase() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename Key, typename Value, unsigned int H, internal::BitExtractorGeneric&lt; Key &gt; BitExtractor = internal::BitExtractor&lt;Key&gt;, internal::MapGeneric&lt; typename BitExtractor::ShiftResult, std::uintptr_t &gt; Hash = internal::DefaultHash&lt;typename BitExtractor::ShiftResult, std::uintptr_t&gt;, typename Compare = std::less&lt;Key&gt;, typename ArbitraryAllocator = std::allocator&lt;Key&gt;&gt; </div>
+<div class="memtemplate">
+template&lt;typename Iterator, typename = std::enable_if_t&lt;std::is_base_of_v&lt;typename YFastTrie::Where, Iterator&gt;&gt;&gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">Iterator <a class="el" href="classyfast_1_1fastmap.html">yfast::fastmap</a>&lt; Key, Value, H, BitExtractor, Hash, Compare, ArbitraryAllocator &gt;::erase </td>
+          <td>(</td>
+          <td class="paramtype">Iterator</td>          <td class="paramname"><span class="paramname"><em>i</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<p>erase entry by iterator </p><dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">i</td><td>iterator (may be a const iterator and/or a reverse iterator) </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>iterator following the removed entry with respect to the iterator direction </dd></dl>
 
 </div>
 </div>
