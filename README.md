@@ -16,6 +16,29 @@ faster inserts)
 
 See [Performance](#performance) for details and benchmark test results
 
+## Table of contents
+- [Usage](#usage)
+  - [Basic usage example](#basic-usage-example)
+  - [Template parameters](#template-parameters)
+  - [Iterators](#iterators)
+    - [Iterator dereference](#iterator-dereference)
+    - [Iterator increment/decrement safety](#iterator-incrementdecrement-safety)
+    - [Iterator reversion](#iterator-reversion)
+    - [Iterator invalidation](#iterator-invalidation)
+  - [Thread safety](#thread-safety)
+  - [Auto-generated docs](#auto-generated-docs)
+- [Prerequisites and dependencies](#prerequisites-and-dependencies)
+  - [C++20](#c20)
+  - [Hash table implementation](#hash-table-implementation)
+  - [cmake](#cmake)
+- [Build and install](#build-and-install)
+  - [cmake](#cmake-1)
+  - [shell](#shell)
+  - [running tests](#running-tests)
+- [Performance](#performance)
+- [Memory consumption](#memory-consumption)
+- [Underlying data structures](#underlying-data-structures)
+
 ## Usage
 ### Basic usage example
 
@@ -98,8 +121,8 @@ mutable otherwise). A reverse iterator may be obtained from a forward iterator b
 `yfast::make_reverse_iterator()` template function.
 
 #### Iterator dereference
-Please note that `iterator::value_type` is `Value`, not `std::pair<Key, Value>`. Entry value is available via `*i` and
-`i->`, as well as `i.value()`; (immutable) entry key is available via `i.key()`
+Note that `iterator::value_type` is `Value`, not `std::pair<Key, Value>`. Entry value is available via `*i` and `i->`,
+as well as `i.value()`; (immutable) entry key is available via `i.key()`
 
 `Value = void` is considered a special case, effectively turning `yfast::fastmap` into a "fastset." In this case
 `iterator::value_type` becomes `const Key`
@@ -135,8 +158,49 @@ Iterator **does not** get invalidated and may be safely dereferenced and increme
 - new entries are inserted
 - other entries are erased
 
+### Thread safety
+None of `yfast::fastmap` methods are either thread-safe or thread-aware
+
 ### Auto-generated docs
 See [yfast::fastmap](https://vaganov.github.io/y-fast/html/classyfast_1_1fastmap.html) class summary
+
+## Prerequisites and dependencies
+
+### C++20
+Due to use of [concepts](https://en.cppreference.com/w/cpp/language/constraints) _C++20_ is the minimum required
+standard.
+
+### Hash table implementation
+Whatever is used as hash table implementation is a dependency. The default implementation is
+[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) &mdash; please refer to the project's documentation for
+the installation guide. This dependency, however, may be eliminated by specifying `std::unordered_map` as `Hash`
+template parameter (or simply by defining `YFAST_WITHOUT_HOPSCOTCH_MAP` macro) which will most probably lead to worse
+performance runtime-wise (see [Performance](#performance)).
+
+### [cmake](https://cmake.org/download)
+**cmake** is being used for building tests and installation (the latter may be done by simply copying the headers).
+
+## Build and install
+Since **yfast** is a template library, there is no build stage as such (apart from the tests).
+
+### cmake
+
+    $ git clone https://github.com/vaganov/y-fast
+    $ cd y-fast
+    $ cmake .
+    $ sudo cmake --install .
+
+### shell
+
+    $ git clone https://github.com/vaganov/y-fast
+    $ cd y-fast
+    $ sudo cp -r include/yfast /usr/local/include
+
+### running tests
+
+    $ cd cmake-build  # YMMV
+    $ make
+    $ ctest
 
 ## Performance
 Every y-fast trie lookup operation (find match/predecessor/successor) performs `O(ln H)` key shifts and `O(ln H)` hash
@@ -169,15 +233,15 @@ These hash maps have been tested as underlying hash table:
 Benchmark tests have been conducted in the following manner:
 
 for a sample size `M`:
-- populate container with `M` random keys
-- generate random sample of another `M` keys
+- populate the container with `M` random keys
+- generate a random sample of another `M` keys
 - **insert** sample keys one by one in a loop (thus doubling the size)
-- measure clock time of the previous action
+- measure the clock time of the previous action
 - **find** sample keys one by one in a loop
-- measure clock time of the previous action
+- measure the clock time of the previous action
 - **find and delete** sample keys one by one in a loop (thus halving the size)
-- measure clock time of the previous action
-- divide the clock times by sample size
+- measure the clock time of the previous action
+- divide the clock times by the sample size
 
 Test source file may be found in [test/benchmark.cpp](test/benchmark.cpp)
 
@@ -223,8 +287,9 @@ the y-axis
 Based on benchmark tests, [tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) has been picked as default
 
 ## Memory consumption
-While maintaining linear memory use, `yfast::fastmap` consumes around 30% more RAM than `std::map` due to use of `H`
-hash tables.
+While maintaining linear (in container size) memory use, `yfast::fastmap` consumes `α H` more RAM than `std::map` due to
+use of `H` hash tables, with `α` depending on the underlying hash table implementation. For
+[tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) `α ~ 0.01` may be taken.
 
 ## Underlying data structures
 While `yfast::fastmap` is merely a wrapper (mostly iterator paperwork), these classes implement underlying data

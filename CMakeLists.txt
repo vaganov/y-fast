@@ -52,3 +52,5 @@ add_test(NAME xfast_unit_test COMMAND xfast_unit_test)
 add_test(NAME yfast_unit_test COMMAND yfast_unit_test)
 add_test(NAME fastmap_unit_test COMMAND fastmap_unit_test)
 add_test(NAME uuid_fuzz_test COMMAND uuid_fuzz_test)
+
+install(DIRECTORY include/yfast TYPE INCLUDE)
