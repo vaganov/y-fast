@@ -243,10 +243,13 @@ for a sample size `M`:
 - measure the clock time of the previous action
 - divide the clock times by the sample size
 
-Test source file may be found in [test/benchmark.cpp](test/benchmark.cpp)
+Test source file may be found in [test/benchmark.cpp](test/benchmark.cpp). You may want to decrease `N1` constant in
+order to run it on a machine with low memory. Note that benchmark test:
+- is not included in the test suite by default
+- requires all the hash map implementations to be installed
 
-Tests have been run on AWS _r6a.8xlarge_ and _m6g.16xlarge_ instances. Sample size on the x-axis, time in nanoseconds on
-the y-axis
+Tests have been run on AWS _r6a.8xlarge_ and _m6g.16xlarge_ instances. Sample size on the (logarithmic) x-axis, time in
+nanoseconds on the y-axis
 
 #### ARM64, find
 <picture>
@@ -287,8 +290,8 @@ the y-axis
 Based on benchmark tests, [tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) has been picked as default
 
 ## Memory consumption
-While maintaining linear (in container size) memory use, `yfast::fastmap` consumes `α H` more RAM than `std::map` due to
-use of `H` hash tables, with `α` depending on the underlying hash table implementation. For
+While maintaining linear (in container size) memory use, `yfast::fastmap` consumes `1 + α H` times more RAM than
+`std::map` due to use of `H` hash tables, with `α` depending on the underlying hash table implementation. For
 [tsl::hopscotch_map](https://github.com/Tessil/hopscotch-map) `α ~ 0.01` may be taken.
 
 ## Underlying data structures
