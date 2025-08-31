@@ -6,6 +6,7 @@
 #include <iterator>
 #include <memory>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 #include <yfast/impl/yfast.h>
@@ -684,20 +685,19 @@ public:
      * @param i iterator (may be a const iterator and/or a reverse iterator)
      * @return iterator following the removed entry with respect to the iterator direction
      */
-    template <typename Iterator>
-    Iterator erase(const Iterator& i) {
+    template <typename Iterator, typename = std::enable_if_t<std::is_base_of_v<typename YFastTrie::Where, Iterator>>>
+    Iterator erase(Iterator i) {
         if (i.trie != &_trie) {
             throw std::invalid_argument("yfast::fastmap::erase");
         }
         if (i.leaf == nullptr) {
             return i;
         }
-        auto j = i;
-        ++j;
-        _trie.remove(i.leaf, i.xleaf);
-        std::allocator_traits<Alloc>::destroy(_alloc, i.leaf);
-        std::allocator_traits<Alloc>::deallocate(_alloc, i.leaf, 1);
-        return j;
+        auto j = i++;
+        _trie.remove(j.leaf, j.xleaf);
+        std::allocator_traits<Alloc>::destroy(_alloc, j.leaf);
+        std::allocator_traits<Alloc>::deallocate(_alloc, j.leaf, 1);
+        return i;
     }
 
     /**
@@ -710,7 +710,9 @@ public:
         if (i == end()) {
             return false;
         }
-        _trie.remove(i);
+        _trie.remove(i.leaf, i.xleaf);
+        std::allocator_traits<Alloc>::destroy(_alloc, i.leaf);
+        std::allocator_traits<Alloc>::deallocate(_alloc, i.leaf, 1);
         return true;
     }
 
