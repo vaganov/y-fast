@@ -130,10 +130,11 @@ public:
     }
 
     /**
-     * insert a new leaf
+     * insert a new leaf, replacing leaf with the equal key (if any)
      * @param leaf leaf to insert
+     * @return leaf being replaced or \a nullptr
      */
-    void insert(Leaf* leaf) {
+    Leaf* insert(Leaf* leaf) {
         Leaf* prv;
         Leaf* nxt;
         auto [guess, missed, level] = approx(leaf->key);
@@ -148,7 +149,8 @@ public:
                 nxt = guess->nxt;
                 break;
             case ON_TARGET:
-                return;
+                _hash[0][_bx.shift(leaf->key, 0)] = reinterpret_cast<std::uintptr_t>(leaf);
+                return guess;
             case MISSED_RIGHT:
                 prv = guess->prv;
                 nxt = guess;
@@ -238,6 +240,8 @@ public:
         if (_rightmost == nullptr || _cmp(_rightmost->key, leaf->key)) {
             _rightmost = leaf;
         }
+
+        return nullptr;
     }
 
     /**
